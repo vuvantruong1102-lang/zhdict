@@ -65,9 +65,10 @@ export default function Chinese() {
     setData(cached);
     const todo = Object.keys(NEEDS).filter((k) => !NEEDS[k](cached[k]));
     todo.forEach((k) => fetchSection(term, k));
-    // Nghĩa cốt lõi (ChatGPT) tự tải ngay, không cần bấm.
-    // Tải lại nếu chưa có hoặc cache theo schema cũ (version < 2).
-    if (!cached.gpt || (cached.gpt.version || 0) < 7) fetchSection(term, "gpt");
+    // ChatGPT (collocation, cấu trúc, phân biệt) tự tải ngay, không cần bấm.
+    if (!cached.gpt || (cached.gpt.version || 0) < 8) fetchSection(term, "gpt");
+    // Nghĩa cốt lõi = phần "AI giải thích" của Baike -> tự tải ngay.
+    if (!cached.explain || (cached.explain.version || 0) < 5) fetchSection(term, "explain");
   }
 
   // Tra tức thì (lookup) hoặc accordion (explain/zdic)
@@ -134,13 +135,13 @@ export default function Chinese() {
                   hanVietLocal={hanVietFn ? hanVietFn(word) : null} />
               </div>
 
-              {/* Nghĩa cốt lõi — auto hiện, tách khỏi ChatGPT */}
+              {/* Nghĩa cốt lõi — nội dung AI giải thích (từ Baike), auto hiện */}
               <div className="card card-pad fade-in">
-                <CoreMeaning d={data.gpt} loading={loading.gpt} />
+                <CoreMeaning d={data.explain} loading={loading.explain} />
               </div>
 
               <Accordion title="ChatGPT"
-                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 7)} loading={loading.gpt}
+                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 8)} loading={loading.gpt}
                 onLoad={() => fetchSection(word, "gpt")}
                 onRefresh={() => fetchSection(word, "gpt")}>
                 <GptBody d={data.gpt} onPick={(w) => lookup(w)} />
@@ -289,19 +290,15 @@ function LookupBody({ d, word, hanVietLocal }) {
   );
 }
 
-// Nghĩa cốt lõi — auto hiện, ô nền đỏ nổi bật
+// Nghĩa cốt lõi — lấy nội dung "AI giải thích" (từ endpoint explain/Baike)
 function CoreMeaning({ d, loading }) {
-  if (loading && !d) return <div className="muted tiny">Đang tải nghĩa cốt lõi…</div>;
-  if (!d) return <div className="muted tiny">Đang tải nghĩa cốt lõi…</div>;
+  if (!d || (loading && !d.ai_explain_vi)) return <div className="muted tiny">Đang tải nghĩa cốt lõi…</div>;
   if (d.__error) return <div style={{ color: "#c2185b" }}>{d.__error}</div>;
-  if (!d.core_vi) return <div className="muted tiny">Không có dữ liệu.</div>;
+  if (!d.ai_explain_vi) return <div className="muted tiny">Không có dữ liệu.</div>;
   return (
     <div>
       <div className="field-label" style={{ margin: 0, color: "#dc143b" }}>✦ Nghĩa cốt lõi</div>
-      <div style={{ fontSize: 16, fontWeight: 600, marginTop: 6 }}>{d.core_vi}</div>
-      {d.core_note_vi && (
-        <div style={{ marginTop: 6, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{d.core_note_vi}</div>
-      )}
+      <div style={{ marginTop: 6, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{d.ai_explain_vi}</div>
     </div>
   );
 }
@@ -432,14 +429,6 @@ function ExplainBody({ d }) {
   const hasBaike = d.source === "baidu_baike";
   return (
     <div className="stack">
-      {/* AI giải thích — luôn hiển thị */}
-      <p className="field-label" style={{ margin: 0 }}>🤖 AI giải thích</p>
-      {d.ai_explain_vi
-        ? <div style={{ whiteSpace: "pre-wrap" }}>{d.ai_explain_vi}</div>
-        : <div className="muted tiny">Chưa có giải thích từ AI.</div>}
-
-      <div className="divider" />
-
       {/* Nội dung Baidu Baike */}
       {hasBaike
         ? <span className="badge tieng_trung">Nguồn: Baidu Baike</span>
