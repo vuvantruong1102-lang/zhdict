@@ -1,6 +1,6 @@
 {
-  "name": "中文 Tra cứu Tiếng Trung",
-  "short_name": "Tra Trung",
+  "name": "ZDICT — Tra cứu Tiếng Trung",
+  "short_name": "ZDICT",
   "description": "Tra cứu & dịch tiếng Trung: pinyin, Hán Việt, HSK, lịch sử",
   "lang": "vi",
   "start_url": "/",
