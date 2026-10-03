@@ -59,8 +59,8 @@ export default function Sidebar({ onHide }) {
     <aside className="sidebar">
       <div className="nav-scroll">
         <div className="brand">
-          <span className="brand-mark">中</span>
-          <span className="brand-name">中文 Tra cứu</span>
+          <span className="brand-mark">志</span>
+          <span className="brand-name">ZDICT</span>
           {onHide && (
             <button className="nav-collapse" onClick={onHide} title="Ẩn menu" aria-label="Ẩn menu">«</button>
           )}
