@@ -26,7 +26,7 @@ export default function AskBox({ context, placeholder }) {
       {items.map((it, i) => (
         <div key={i} className="ask-item">
           <div className="ask-q">❓ {it.q}</div>
-          <div className="ask-a">{it.a === null ? <span className="muted tiny">Đang trả lời…</span> : it.a}</div>
+          <div className="ask-a" style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{it.a === null ? <span className="muted tiny">Đang trả lời…</span> : it.a}</div>
         </div>
       ))}
       <div className="row" style={{ gap: 8 }}>
