@@ -114,19 +114,7 @@ export default function Translate() {
               <div key={si} className="card card-pad stack">
                 {res.sentences.length > 1 && <p className="field-label" style={{ margin: 0 }}>Câu {si + 1}</p>}
 
-                {/* Câu gốc nhóm theo cụm nghĩa: khung in đậm, cụm nghĩa gạch chân */}
-                {Array.isArray(s.segments) && s.segments.length > 0 && (
-                  <div className="chunk-line zh">
-                    {s.segments.map((seg, i) => {
-                      const cls = seg.type === "frame" ? "seg-frame"
-                        : seg.type === "chunk" ? "seg-chunk"
-                        : seg.type === "punct" ? "seg-punct" : "seg-plain";
-                      return <span key={i} className={cls}>{seg.text}</span>;
-                    })}
-                  </div>
-                )}
-
-                {/* Bản dịch tiếng Việt */}
+                {/* Dòng 1: bản dịch tiếng Việt */}
                 <div className="tok-trans"><b>Dịch:</b> {s.translation_vi}</div>
 
                 {/* Dòng 2: chữ Hán (trên) + pinyin (dưới), tô màu theo vai trò ngữ pháp */}
