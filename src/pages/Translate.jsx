@@ -7,25 +7,7 @@ import AskBox from "../components/AskBox.jsx";
 
 const hasHan = (s) => /[\u4e00-\u9fff]/.test(s || "");
 
-// Màu theo vai trò ngữ pháp
-const ROLE_COLORS = {
-  subject:     "#c0392b", // chủ ngữ — đỏ
-  verb:        "#1e7e34", // động từ/vị ngữ — xanh lá
-  object:      "#2471a3", // tân ngữ — xanh dương
-  attributive: "#8e44ad", // định ngữ — tím
-  adverbial:   "#b9770e", // trạng ngữ — cam
-  conjunction: "#7f8c8d", // liên/giới/trợ từ — xám
-  other:       "var(--text)",
-};
-const ROLE_LABELS = {
-  subject: "chủ ngữ", verb: "động từ / vị ngữ", object: "tân ngữ",
-  attributive: "định ngữ", adverbial: "trạng ngữ", conjunction: "liên/giới/trợ từ", other: "khác",
-};
-// Chú thích chỉ hiện các vai trò chính
-const LEGEND = [
-  ["subject", "Chủ ngữ"], ["verb", "Động từ/Vị ngữ"], ["object", "Tân ngữ"],
-  ["attributive", "Định ngữ"], ["adverbial", "Trạng ngữ"],
-];
+
 
 // Tách văn bản dài thành từng câu (tránh timeout). Cắt theo dấu câu tiếng Trung;
 // câu nào vẫn quá dài thì cắt tiếp theo dấu phẩy.
@@ -71,7 +53,7 @@ export default function Translate() {
       for (let i = 0; i < chunks.length; i++) {
         if (chunks.length > 1) setProgress({ i: i + 1, n: chunks.length });
         const r = await api.sentence(chunks[i]);
-        sentences.push({ chinese: chunks[i], tokens: r.tokens || [], segments: r.segments || [], translation_vi: r.translation_vi || "" });
+        sentences.push({ chinese: chunks[i], chunks: r.chunks || [], translation_vi: r.translation_vi || "" });
       }
       setRes({ text: full, sentences });
     } catch (e) {
@@ -114,47 +96,39 @@ export default function Translate() {
               <div key={si} className="card card-pad stack">
                 {res.sentences.length > 1 && <p className="field-label" style={{ margin: 0 }}>Câu {si + 1}</p>}
 
-                {/* Câu gốc nhóm theo cụm nghĩa: khung in đậm, cụm nghĩa gạch chân */}
-                {Array.isArray(s.segments) && s.segments.length > 0 && (
-                  <div className="chunk-line zh">
-                    {s.segments.map((seg, i) => {
-                      const cls = seg.type === "proper" ? "seg-proper"
-                        : seg.type === "frame" ? "seg-frame"
-                        : seg.type === "conj" ? "seg-conj"
-                        : seg.type === "chunk" ? "seg-chunk"
-                        : seg.type === "punct" ? "seg-punct" : "seg-plain";
-                      return <span key={i} className={cls}>{seg.text}</span>;
+                {/* Câu gốc chia cụm nghĩa: mỗi chữ có pinyin, click tra được;
+                    từ ngữ pháp của kết cấu cách xa in đậm; tên riêng đỏ; liên từ xanh lá */}
+                {Array.isArray(s.chunks) && s.chunks.length > 0 && (
+                  <div className="chunk-flow">
+                    {s.chunks.map((ch, ci) => {
+                      const chCls = "chunk-grp"
+                        + (ch.type === "proper" ? " grp-proper" : "")
+                        + (ch.type === "conj" ? " grp-conj" : "")
+                        + (ch.type === "punct" ? " grp-punct" : "");
+                      return (
+                        <span key={ci} className={chCls}>
+                          {(ch.tokens || []).map((t, ti) => {
+                            const isPunct = ch.type === "punct" || !hasHan(t.hz);
+                            if (isPunct) return <span key={ti} className="cf-punct zh">{t.hz}</span>;
+                            const py = t.pinyin || pinyin(t.hz, { toneType: "symbol" });
+                            return (
+                              <span key={ti}
+                                className={"cf-tok" + (t.emphasis ? " cf-emph" : "")}
+                                onClick={() => lookupWord(t.hz)}
+                                title={`${t.meaning_vi || ""} — bấm để tra`}>
+                                <span className="cf-hz zh">{t.hz}</span>
+                                <span className="cf-py">{py}</span>
+                              </span>
+                            );
+                          })}
+                        </span>
+                      );
                     })}
                   </div>
                 )}
 
                 {/* Bản dịch tiếng Việt */}
                 <div className="tok-trans"><b>Dịch:</b> {s.translation_vi}</div>
-
-                {/* Dòng 2: chữ Hán (trên) + pinyin (dưới), tô màu theo vai trò ngữ pháp */}
-                <div className="sent-flow">
-                  {s.tokens.map((t, i) => {
-                    if (!hasHan(t.token)) return <span key={i} className="flow-punct zh">{t.token}</span>;
-                    const py = t.pinyin || pinyin(t.token, { toneType: "symbol" });
-                    const color = ROLE_COLORS[t.role] || ROLE_COLORS.other;
-                    return (
-                      <span key={i} className="flow-tok" onClick={() => lookupWord(t.token)}
-                        title={`${t.meaning_vi || ""}${t.role ? ` · ${ROLE_LABELS[t.role] || t.role}` : ""} — bấm để tra`}>
-                        <span className="flow-hz zh" style={{ color }}>{t.token}</span>
-                        <span className="flow-py" style={{ color }}>{py}</span>
-                      </span>
-                    );
-                  })}
-                </div>
-
-                {/* Chú thích màu */}
-                <div className="role-legend">
-                  {LEGEND.map(([role, label]) => (
-                    <span key={role} className="role-chip">
-                      <span className="role-dot" style={{ background: ROLE_COLORS[role] }} />{label}
-                    </span>
-                  ))}
-                </div>
 
                 <AskBox context={`Câu tiếng Trung: "${s.chinese}" — Bản dịch: ${s.translation_vi}`}
                   placeholder="Hỏi về câu này…" />
