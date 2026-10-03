@@ -121,17 +121,23 @@ export default function Translate() {
                       return (
                         <span key={ci} className="chunk-grp">
                           {(ch.tokens || []).map((t, ti) => {
-                            if (!hasHan(t.hz)) return <span key={ti} className="cf-punct zh">{t.hz}</span>;
-                            const py = t.pinyin || pinyin(t.hz, { toneType: "symbol" });
+                            const hz = (t.hz || "").trim();
+                            // Dấu câu thuần (không phải chữ cái/chữ số) -> hiển thị trơn
+                            const isPunctOnly = !hasHan(hz) && !/[A-Za-z0-9]/.test(hz);
+                            if (isPunctOnly) return <span key={ti} className="cf-punct zh">{t.hz}</span>;
+                            const py = hasHan(hz) ? (t.pinyin || pinyin(hz, { toneType: "symbol" })) : (t.pinyin || "");
                             // Tên riêng -> đỏ; còn lại, nếu thuộc danh sách liên từ/ngữ pháp -> xanh
-                            const cls = isProper ? " cf-proper" : (isGreen(t.hz) ? " cf-green" : "");
+                            const cls = isProper ? " cf-proper" : (isGreen(hz) ? " cf-green" : "");
+                            // Gạch chân từ ghép dài 2-4 chữ Hán (chỉ tính chữ Hán)
+                            const hanLen = (hz.match(/[\u4e00-\u9fff]/g) || []).length;
+                            const underline = hanLen >= 2 && hanLen <= 4 ? " cf-underline" : "";
                             return (
                               <span key={ti}
-                                className={"cf-tok" + cls}
-                                onClick={() => lookupWord(t.hz)}
+                                className={"cf-tok" + cls + underline}
+                                onClick={() => lookupWord(hz)}
                                 title={`${t.meaning_vi || ""} — bấm để tra`}>
                                 <span className="cf-hz zh">{t.hz}</span>
-                                <span className="cf-py">{py}</span>
+                                <span className="cf-py">{py || "\u00a0"}</span>
                               </span>
                             );
                           })}
