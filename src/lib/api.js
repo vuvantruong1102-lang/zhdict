@@ -13,6 +13,7 @@ export const api = {
   lookup:      (word) => post("/api/lookup", { word }),
   translatevi: (word, definition_en, han_viet) =>
                  post("/api/translatevi", { word, definition_en, han_viet }),
+  core:        (word) => post("/api/core",      { word }),
   gpt:         (word) => post("/api/gpt",       { word }),
   explain:     (word) => post("/api/explain",   { word }),
   zdic:        (word) => post("/api/zdic",      { word }),
