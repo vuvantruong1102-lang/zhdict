@@ -1,7 +1,6 @@
 // POST { word } -> {
 //   core_vi, core_note_vi,
-//   examples:     [{ zh, pinyin, vi, collocation }],                 // 6
-//   collocations: [{ zh, pinyin, vi }],                              // 6
+//   collocations: [{ zh, pinyin, vi, ex_zh, ex_pinyin, ex_vi }],     // >=6, mỗi cái kèm 1 ví dụ
 //   structures:   [{ pattern, pinyin, vi, example_zh, example_pinyin, example_vi }], // 3
 //   compare:      [{ word, pinyin, vi, diff_vi,
 //                    collocations:[{zh,pinyin,vi}]x3,
@@ -9,7 +8,7 @@
 //   version
 // }
 import { chatJSON, isChinese } from "./_lib/openai.js";
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
@@ -27,11 +26,12 @@ export default async function handler(req, res) {
         `(ví dụ với 亮相: "xuất hiện công khai / ra mắt / lộ diện / trình làng").\n` +
         `2. "core_note_vi": 2-4 câu giải thích sâu sắc thái và cách dùng đặc trưng, có đối chiếu với từ dễ nhầm nếu có ` +
         `(ví dụ: "Nó không đơn thuần là 出现 – xuất hiện, mà thường hàm ý xuất hiện trước công chúng để mọi người nhìn thấy, chú ý hoặc đánh giá.").\n` +
-        `3. "examples": đúng 6 câu ví dụ, mỗi câu một collocation/ngữ cảnh KHÁC NHAU. Phần tử: {"zh","pinyin"(có dấu thanh),"vi","collocation"}.\n` +
-        `4. "collocations": ÍT NHẤT 6 (lý tưởng 6-8) collocation phổ biến nhất. Phần tử: {"zh","pinyin","vi"}.\n` +
-        `5. "structures": đúng 3 cấu trúc/mẫu câu thường gặp, MỖI CẤU TRÚC kèm 1 ví dụ. ` +
+        `3. "collocations": ÍT NHẤT 6 (lý tưởng 6-8) collocation phổ biến nhất với "${word}". ` +
+        `MỖI collocation kèm 1 câu ví dụ minh họa. Phần tử: ` +
+        `{"zh"(cụm chữ Hán),"pinyin","vi"(nghĩa cụm),"ex_zh"(câu ví dụ chữ Hán),"ex_pinyin"(pinyin câu),"ex_vi"(dịch câu)}.\n` +
+        `4. "structures": đúng 3 cấu trúc/mẫu câu thường gặp, MỖI CẤU TRÚC kèm 1 ví dụ. ` +
         `Phần tử: {"pattern"(mẫu chữ Hán),"pinyin","vi"(giải thích cách dùng),"example_zh","example_pinyin","example_vi"}.\n` +
-        `6. "compare": đúng 3 từ gần nghĩa nhất với "${word}". Mỗi phần tử: ` +
+        `5. "compare": đúng 3 từ gần nghĩa nhất với "${word}". Mỗi phần tử: ` +
         `{"word","pinyin","vi"(nghĩa chính ngắn),"diff_vi"(2-3 câu phân biệt rõ với "${word}" và góc nhìn riêng của từ này),` +
         `"collocations":[đúng 3 phần tử {"zh","pinyin","vi"}],"examples":[đúng 2 phần tử {"zh","pinyin","vi"}]}.\n\n` +
         `Luôn điền đủ số lượng yêu cầu. Chỉ trả JSON đúng cấu trúc.`,
@@ -50,7 +50,6 @@ export default async function handler(req, res) {
     return res.status(200).json({
       core_vi: payload.core_vi || "",
       core_note_vi: payload.core_note_vi || "",
-      examples: arr(payload.examples).slice(0, 6),
       collocations: arr(payload.collocations).slice(0, 8),
       structures: arr(payload.structures).slice(0, 3),
       compare: cmp,
