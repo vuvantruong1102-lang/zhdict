@@ -560,3 +560,24 @@ a { color: var(--accent-700); text-decoration: none; }
 .role-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 2px; }
 .role-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-mute); }
 .role-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* ===== Câu gốc nhóm theo cụm nghĩa (chunking) ===== */
+.chunk-line {
+  font-size: 17px;              /* giống ô nhập */
+  line-height: 1.9;
+  padding: 4px 0 2px;
+}
+.chunk-line .seg-chunk {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  margin: 0 3px;                /* các cụm cách nhau nhẹ */
+}
+.chunk-line .seg-frame {
+  font-weight: 800;
+  color: #c0392b;
+  margin: 0 2px;
+}
+.chunk-line .seg-plain { margin: 0 1px; }
+.chunk-line .seg-punct { color: var(--text-mute); }
