@@ -64,7 +64,7 @@ a { color: var(--accent-700); text-decoration: none; }
 
 .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 22px; }
 .brand-mark {
-  width: 30px; height: 30px; background: var(--accent); color: #fff;
+  width: 30px; height: 30px; background: #dc143b; color: #fff;
   border-radius: 8px; display: inline-flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 14px; letter-spacing: -.02em; flex-shrink: 0;
 }
