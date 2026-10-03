@@ -541,59 +541,39 @@ a { color: var(--accent-700); text-decoration: none; }
 .hsk-word:hover { background: var(--accent-tint); border-color: var(--accent); }
 .hsk-word .zh { font-size: 20px; }
 
-/* ===== Dịch tiếng Trung: dòng chảy câu tô màu theo vai trò ===== */
-.sent-flow {
+
+
+
+
+
+/* ===== Câu gốc chia cụm nghĩa (có pinyin, click tra được) ===== */
+.chunk-flow {
   display: flex; flex-wrap: wrap; align-items: flex-end;
-  gap: 4px 14px;                 /* giãn cách giữa các từ rộng hơn bình thường */
-  padding: 6px 0; line-height: 1.35;
+  gap: 6px 22px;                 /* khoảng cách GIỮA CÁC CỤM rộng */
+  padding: 8px 0 4px;
 }
-.flow-tok {
+.chunk-grp {
+  display: inline-flex; align-items: flex-end;
+  gap: 0 2px;                    /* các từ trong cùng cụm sát nhau */
+}
+.cf-tok {
   display: inline-flex; flex-direction: column; align-items: center;
   cursor: pointer; border-radius: 6px; padding: 2px 3px;
   transition: background .12s;
 }
-.flow-tok:hover { background: var(--surface-2); }
-.flow-hz { font-size: 24px; font-weight: 500; line-height: 1.15; }
-.flow-py { font-size: 12px; margin-top: 1px; opacity: .85; }
-.flow-punct { font-size: 24px; align-self: flex-end; color: var(--text-mute); }
+.cf-tok:hover { background: var(--surface-2); }
+.cf-hz { font-size: 24px; font-weight: 500; line-height: 1.15; }
+.cf-py { font-size: 12px; margin-top: 1px; opacity: .85; }
+.cf-punct { font-size: 24px; align-self: flex-end; color: var(--text-mute); }
 
-.role-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 2px; }
-.role-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-mute); }
-.role-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+/* từ ngữ pháp của kết cấu cách xa (在 ... 之下): in đậm, màu đen */
+.cf-emph .cf-hz { font-weight: 800; color: var(--text); }
+.cf-emph .cf-py { font-weight: 700; color: var(--text); opacity: 1; }
 
-/* ===== Câu gốc nhóm theo cụm nghĩa (chunking) ===== */
-.chunk-line {
-  font-size: 20px;              /* ~1.2x cỡ ô nhập (17px) */
-  line-height: 2.0;
-  padding: 6px 0 2px;
-}
-/* cụm nghĩa thường: gạch chân, cách nhau xa */
-.chunk-line .seg-chunk {
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 5px;
-  margin: 0 10px;
-}
-/* tên riêng (người, địa danh...): in đậm, màu đỏ thương hiệu */
-.chunk-line .seg-proper {
-  font-weight: 800;
-  color: #dc143b;
-  margin: 0 10px;
-}
-/* kết cấu ngữ pháp cách xa (在...之下): in đậm, màu đen, viết liền */
-.chunk-line .seg-frame {
-  font-weight: 800;
-  color: var(--text);
-  margin: 0 10px;
-}
-/* liên từ nối (和, 与...): gạch chân */
-.chunk-line .seg-conj {
-  text-decoration: underline;
-  text-decoration-color: var(--text-mute);
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 5px;
-  margin: 0 10px;
-}
-.chunk-line .seg-plain { margin: 0 6px; }
-.chunk-line .seg-punct { color: var(--text-mute); margin: 0 2px; }
+/* tên riêng: đỏ + đậm */
+.grp-proper .cf-hz { color: #dc143b; font-weight: 700; }
+.grp-proper .cf-py { color: #dc143b; }
+
+/* liên từ nối: xanh lá */
+.grp-conj .cf-hz { color: #1e7e34; font-weight: 700; }
+.grp-conj .cf-py { color: #1e7e34; }
