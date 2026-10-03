@@ -67,7 +67,7 @@ export default function Chinese() {
     todo.forEach((k) => fetchSection(term, k));
     // Nghĩa cốt lõi (ChatGPT) tự tải ngay, không cần bấm.
     // Tải lại nếu chưa có hoặc cache theo schema cũ (version < 2).
-    if (!cached.gpt || (cached.gpt.version || 0) < 2) fetchSection(term, "gpt");
+    if (!cached.gpt || (cached.gpt.version || 0) < 3) fetchSection(term, "gpt");
   }
 
   // Tra tức thì (lookup) hoặc accordion (explain/zdic)
@@ -140,7 +140,7 @@ export default function Chinese() {
               </div>
 
               <Accordion title="ChatGPT"
-                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 2)} loading={loading.gpt}
+                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 3)} loading={loading.gpt}
                 onLoad={() => fetchSection(word, "gpt")}
                 onRefresh={() => fetchSection(word, "gpt")}>
                 <GptBody d={data.gpt} onPick={(w) => lookup(w)} />
@@ -277,16 +277,12 @@ function LookupBody({ d, word, hanVietLocal }) {
   if (!d) return <div className="muted tiny">Đang tra…</div>;
   if (d.__error) return <div style={{ color: "#c2185b" }}>{d.__error}</div>;
   const hanviet = hanVietLocal || d.han_viet;
-  const py = pinyin(word, { toneType: "symbol" });
+  const traditional = d.traditional || word;
   return (
     <div className="row" style={{ flexWrap: "wrap", alignItems: "baseline", gap: "6px 18px", rowGap: 6 }}>
-      {d.traditional && d.traditional !== word && (
-        <span><span className="zh" style={{ fontSize: 18, color: "#8e44ad" }}>{d.traditional}</span>
-          <span className="tiny muted"> (phồn thể)</span></span>
-      )}
-      <span style={{ color: "var(--accent-700)", fontWeight: 600, fontSize: 16 }}>{py}</span>
-      {hanviet && <span style={{ color: "#c0392b", fontWeight: 600 }}>{hanviet}</span>}
-      {d.definition_en && <span style={{ color: "#2471a3" }}>{d.definition_en}</span>}
+      <span><b>Phồn thể:</b> <span className="zh" style={{ fontSize: 18, color: "#8e44ad" }}>{traditional}</span></span>
+      {hanviet && <span><b>Hán Việt:</b> <span style={{ color: "#c0392b", fontWeight: 600 }}>{hanviet}</span></span>}
+      {d.definition_en && <span><b>Nghĩa (Anh):</b> <span style={{ color: "#2471a3" }}>{d.definition_en}</span></span>}
     </div>
   );
 }
@@ -316,11 +312,24 @@ function GptBody({ d, onPick }) {
   const structures = d.structures || [];
   const compare = d.compare || [];
 
-  // 1 câu ví dụ gộp thành 1 dòng: 中文 / pinyin / nghĩa Việt
-  const exLine = (ex) => [ex.zh, ex.pinyin, ex.vi].filter(Boolean).join(" / ");
-
   return (
     <div className="stack" style={{ gap: 18 }}>
+      {/* Collocation — lên trước, tất cả trong 1 ô */}
+      {collocations.length > 0 && (
+        <div>
+          <p className="field-label" style={{ margin: "0 0 6px" }}>🔗 Collocation phổ biến</p>
+          <div className="card card-pad" style={{ background: "var(--surface-2)" }}>
+            {collocations.map((c, i) => (
+              <div key={i} style={{ padding: "6px 0", borderTop: i ? "1px solid var(--border)" : "none", lineHeight: 1.5 }}>
+                <span className="zh" style={{ fontSize: 16 }}>{c.zh}</span>
+                <span style={{ color: "var(--accent-700)" }}> / {c.pinyin}</span>
+                <span> / {c.vi}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Câu ví dụ — tất cả trong 1 ô, mỗi câu 1 dòng */}
       {examples.length > 0 && (
         <div>
@@ -331,22 +340,6 @@ function GptBody({ d, onPick }) {
                 <span className="zh">{ex.zh}</span>
                 <span style={{ color: "var(--accent-700)" }}> / {ex.pinyin}</span>
                 <span> / {ex.vi}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Collocation — tất cả trong 1 ô */}
-      {collocations.length > 0 && (
-        <div>
-          <p className="field-label" style={{ margin: "0 0 6px" }}>🔗 Collocation phổ biến</p>
-          <div className="card card-pad" style={{ background: "var(--surface-2)" }}>
-            {collocations.map((c, i) => (
-              <div key={i} style={{ padding: "6px 0", borderTop: i ? "1px solid var(--border)" : "none", lineHeight: 1.5 }}>
-                <span className="zh" style={{ fontSize: 16 }}>{c.zh}</span>
-                <span style={{ color: "var(--accent-700)" }}> / {c.pinyin}</span>
-                <span> / {c.vi}</span>
               </div>
             ))}
           </div>
