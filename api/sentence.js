@@ -25,7 +25,13 @@ export default async function handler(req, res) {
         `Nối liền tất cả chữ Hán của mọi token theo thứ tự phải ra ĐÚNG câu gốc, KỂ CẢ dấu câu. ` +
         `Mỗi chunk = {"type","tokens":[...]}.\n` +
         `  - "type" ∈ {"normal","proper","conj","punct"}: ` +
-        `"proper" = cụm là TÊN RIÊNG (người, địa danh, tổ chức, thương hiệu: 特朗普, 美国, 乔·拜登, 白宫...); ` +
+        `"proper" = cụm là TÊN RIÊNG. BẮT BUỘC đánh dấu "proper" cho MỌI tên riêng, không được bỏ sót: ` +
+        `tên người (特朗普=Trump, 拜登=Biden, 习近平, 马斯克=Musk...), ` +
+        `tên quốc gia/địa danh (美国, 中国, 北京, 台湾, 纽约...), ` +
+        `tên tổ chức/cơ quan (白宫, 联合国, 国会...), ` +
+        `tên thương hiệu/sản phẩm (苹果, 华为...), ` +
+        `và tên viết bằng CHỮ LATIN/VIẾT TẮT (NASA, GDP, iPhone, AI, CEO...). ` +
+        `Mỗi tên riêng là MỘT chunk "proper" riêng. Hãy rà kỹ cả câu để không sót tên nào; ` +
         `"conj" = cụm là liên từ/từ nối đứng riêng (和, 与, 及, 并, 而, 或, 跟); ` +
         `"punct" = cụm là dấu câu; "normal" = cụm nghĩa thường.\n` +
         `  - "tokens": tách cụm thành từng từ tiếng Trung. Mỗi token = ` +
