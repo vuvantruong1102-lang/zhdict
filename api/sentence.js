@@ -1,6 +1,6 @@
 // POST { text } -> {
 //   tokens:[{token,pinyin,meaning_vi,role}],   // dòng tô màu phía dưới
-//   segments:[{text,type}],                    // câu gốc nhóm theo cụm nghĩa (chunking)
+//   segments:[{text,type}],                    // câu gốc nhóm theo cụm nghĩa (đọc cho xuôi)
 //   translation_vi
 // }
 import { chatJSON, isChinese } from "./_lib/openai.js";
@@ -23,15 +23,20 @@ export default async function handler(req, res) {
         `{"token"(chữ Hán),"pinyin"(có dấu thanh),"meaning_vi"(nghĩa ngắn),"role"}. ` +
         `"role" ∈ {"subject","verb","object","attributive","adverbial","conjunction","other"} theo chức năng trong câu. ` +
         `GIỮ nguyên các dấu câu (。，、；：？！""''…—) thành token riêng với role="other".\n\n` +
-        `2) "segments": viết lại ĐÚNG câu gốc nhưng CHIA THÀNH CÁC CỤM NGHĨA (chunking) để dễ đọc dễ nhớ. ` +
-        `Mỗi phần tử {"text"(phần chữ Hán liền nhau),"type"}. Nối liền tất cả "text" lại phải ra ĐÚNG câu gốc, kể cả dấu câu. ` +
-        `"type" ∈ {"chunk","frame","plain","punct"}: ` +
-        `"chunk" = một cụm nghĩa hoàn chỉnh (ví dụ "太平洋两岸的工厂" = các nhà máy ở hai bờ Thái Bình Dương); ` +
-        `"frame" = từ/cặp từ thuộc khung cấu trúc ngữ pháp cố định cần làm nổi bật ` +
-        `(ví dụ 因为…所以, 不但…而且, 把, 被, 是…的, 对…来说, 均/都, 虽然…但是 — đánh dấu CHÍNH các từ khung này); ` +
-        `"punct" = dấu câu; "plain" = phần còn lại không thuộc nhóm nào. ` +
-        `Ưu tiên: nếu một phần vừa là khung vừa trong cụm, tách từ khung ra thành "frame" riêng. ` +
-        `Chia hợp lý, mỗi "chunk" là một khối có nghĩa, không chia quá vụn.\n\n` +
+        `2) "segments": viết lại ĐÚNG câu gốc, chia thành các CỤM để ĐỌC CHO XUÔI, dễ hiểu dễ nhớ (gộp thành cụm to hợp lý, không chia quá vụn). ` +
+        `Nối liền tất cả "text" lại phải ra ĐÚNG câu gốc, kể cả dấu câu. Mỗi phần tử {"text","type"}. ` +
+        `"type" ∈ {"chunk","proper","frame","conj","punct","plain"}:\n` +
+        `   - "proper" = TÊN RIÊNG (tên người, địa danh, tổ chức, thương hiệu...). Ví dụ 特朗普, 美国, 白宫, 乔·拜登.\n` +
+        `   - "frame" = một KẾT CẤU NGỮ PHÁP cố định mà các thành phần đứng CÁCH XA nhau ôm lấy nội dung ở giữa ` +
+        `(ví dụ 在...之下, 把...V, 被...V, 是...的, 不但...而且, 因为...所以, 对...来说). ` +
+        `Khi gặp loại này, GỘP TOÀN BỘ kết cấu + phần ở giữa thành MỘT segment "frame" duy nhất, viết liền ` +
+        `(ví dụ "在危险的病毒之下" là một "frame").\n` +
+        `   - "conj" = liên từ/từ nối đứng riêng (和, 与, 及, 并, 而, 或, 跟...).\n` +
+        `   - "punct" = dấu câu.\n` +
+        `   - "chunk" = một cụm nghĩa thông thường để đọc cho xuôi.\n` +
+        `   - "plain" = phần còn lại không thuộc nhóm nào.\n` +
+        `Ưu tiên gộp "đọc cho xuôi" cho các cụm thường; nhưng tên riêng luôn tách thành "proper", ` +
+        `kết cấu khung cách xa luôn gộp thành "frame", liên từ nối luôn là "conj".\n\n` +
         `3) "translation_vi": dịch cả câu sang tiếng Việt mượt, tự nhiên, thoát ý.\n\n` +
         `JSON: {"tokens":[{"token":"","pinyin":"","meaning_vi":"","role":""}],` +
         `"segments":[{"text":"","type":""}],"translation_vi":""}`,
