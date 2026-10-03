@@ -573,3 +573,11 @@ a { color: var(--accent-700); text-decoration: none; }
 /* tên riêng (người, nước, tổ chức...): in đậm + đỏ */
 .cf-proper .cf-hz { color: #dc143b; font-weight: 800; }
 .cf-proper .cf-py { color: #dc143b; font-weight: 700; opacity: 1; }
+
+/* gạch chân từ ghép 2-4 chữ Hán (chỉ gạch dưới chữ Hán, không gạch pinyin) */
+.cf-underline .cf-hz {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
