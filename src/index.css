@@ -562,18 +562,10 @@ a { color: var(--accent-700); text-decoration: none; }
   transition: background .12s;
 }
 .cf-tok:hover { background: var(--surface-2); }
-.cf-hz { font-size: 24px; font-weight: 500; line-height: 1.15; }
+.cf-hz { font-size: 24px; font-weight: 400; line-height: 1.15; }
 .cf-py { font-size: 12px; margin-top: 1px; opacity: .85; }
 .cf-punct { font-size: 24px; align-self: flex-end; color: var(--text-mute); }
 
-/* từ ngữ pháp của kết cấu cách xa (在 ... 之下): in đậm, màu đen */
-.cf-emph .cf-hz { font-weight: 800; color: var(--text); }
-.cf-emph .cf-py { font-weight: 700; color: var(--text); opacity: 1; }
-
-/* tên riêng: đỏ + đậm */
-.grp-proper .cf-hz { color: #dc143b; font-weight: 700; }
-.grp-proper .cf-py { color: #dc143b; }
-
-/* liên từ nối: xanh lá */
-.grp-conj .cf-hz { color: #1e7e34; font-weight: 700; }
-.grp-conj .cf-py { color: #1e7e34; }
+/* liên từ + từ ngữ pháp (之下,在,当,的): in đậm + xanh lá */
+.cf-green .cf-hz { color: #1e7e34; font-weight: 800; }
+.cf-green .cf-py { color: #1e7e34; font-weight: 700; opacity: 1; }
