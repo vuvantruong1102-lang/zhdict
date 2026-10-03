@@ -1,14 +1,14 @@
 // POST { word } -> {
 //   core_vi, core_note_vi,
-//   collocations: [{ zh, pinyin, vi, examples:[{zh,pinyin,vi}]x2 }], // >=6, mỗi cái 2 ví dụ
-//   structures:   [{ pattern, pinyin, vi, example_zh, example_pinyin, example_vi }], // 3
+//   collocations: [{ zh, pinyin, vi, note_vi?, examples:[{zh,pinyin,vi}]x2 }], // 4-8, cụm THẬT
+//   structures:   [{ pattern, pinyin, vi, example_zh, example_pinyin, example_vi }], // 2-4
 //   compare:      [{ word, pinyin, vi, diff_vi,
 //                    collocations:[{zh,pinyin,vi}]x3,
 //                    examples:[{zh,pinyin,vi}]x2 }],                 // 3
 //   version
 // }
 import { chatJSON, isChinese } from "./_lib/openai.js";
-const SCHEMA_VERSION = 5;
+const SCHEMA_VERSION = 6;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
@@ -18,25 +18,30 @@ export default async function handler(req, res) {
     const payload = await chatJSON({
       temperature: 0.6,
       system:
-        "Bạn là giáo viên tiếng Trung giàu kinh nghiệm, dạy người Việt. " +
-        "Giải thích chính xác, tự nhiên, có chiều sâu. " +
-        "Câu ví dụ phải là câu đời thường, hay gặp trong cuộc sống thật (hội thoại, công việc, tin tức, mua sắm, gia đình...), " +
-        "tự nhiên như người bản xứ nói, KHÔNG phải câu mẫu khô cứng trong sách giáo khoa. " +
+        "Bạn là giáo viên tiếng Trung bản ngữ, giàu kinh nghiệm dạy người Việt. " +
+        "Nguyên tắc tối quan trọng: CHỈ đưa ra các cụm (collocation) và câu mà người Trung Quốc THẬT SỰ dùng trong đời sống, " +
+        "báo chí, học thuật hoặc hội thoại. TUYỆT ĐỐI KHÔNG bịa cụm bằng cách ghép máy móc từ đang tra với một danh từ bất kỳ. " +
+        "Thà đưa ít cụm mà chuẩn và đắt, còn hơn nhiều cụm mà gượng ép hoặc không ai dùng. " +
+        "Câu ví dụ phải tự nhiên như người bản xứ nói, lấy từ tình huống đời thường (hội thoại, công việc, tin tức, mua sắm, gia đình, học thuật). " +
         "Chỉ trả JSON, không thêm chữ nào khác.",
       user:
-        `Phân tích từ tiếng Trung "${word}" cho người Việt học tiếng Trung. Trả JSON với các khóa:\n\n` +
-        `1. "core_vi": nghĩa cốt lõi, liệt kê các nét nghĩa chính ngăn cách bằng " / " ` +
-        `(ví dụ với 亮相: "xuất hiện công khai / ra mắt / lộ diện / trình làng").\n` +
-        `2. "core_note_vi": 2-4 câu giải thích sâu sắc thái và cách dùng đặc trưng, có đối chiếu với từ dễ nhầm nếu có.\n` +
-        `3. "collocations": ÍT NHẤT 6 (lý tưởng 6-8) collocation phổ biến nhất với "${word}". ` +
-        `MỖI collocation kèm ĐÚNG 2 câu ví dụ đời thường, thực tế, mỗi câu một tình huống khác nhau. Phần tử: ` +
-        `{"zh"(cụm chữ Hán),"pinyin","vi"(nghĩa cụm),"examples":[đúng 2 phần tử {"zh"(câu chữ Hán),"pinyin"(có dấu thanh),"vi"(dịch câu)}]}.\n` +
-        `4. "structures": đúng 3 cấu trúc/mẫu câu thường gặp, MỖI CẤU TRÚC kèm 1 ví dụ đời thường. ` +
-        `Phần tử: {"pattern"(mẫu chữ Hán),"pinyin","vi"(giải thích cách dùng),"example_zh","example_pinyin","example_vi"}.\n` +
+        `Phân tích từ/cụm tiếng Trung "${word}" cho người Việt học tiếng Trung. Trả JSON với các khóa:\n\n` +
+        `1. "core_vi": nghĩa cốt lõi, liệt kê các nét nghĩa chính ngăn cách bằng " / ".\n` +
+        `2. "core_note_vi": 2-4 câu giải thích sâu sắc thái, cách dùng đặc trưng, đối chiếu với từ dễ nhầm nếu có.\n` +
+        `3. "collocations": các collocation / kết cấu QUAN TRỌNG và THẬT SỰ phổ biến nhất với "${word}", xếp từ hay gặp nhất. ` +
+        `Lấy 4 đến 8 cụm tùy theo từ này thực sự có bao nhiêu cụm đáng học — KHÔNG độn cho đủ số. ` +
+        `Collocation KHÔNG nhất thiết phải chứa nguyên chữ "${word}" ghép với danh từ: nó có thể là cụm động từ, kết cấu ngữ pháp, ` +
+        `dạng biến thể hoặc mẫu cố định mà "${word}" tham gia (ví dụ với 奠基 thì cụm quan trọng nhất là động từ 奠定……基础, ` +
+        `rồi các kết cấu ……的奠基人, 奠基之作, 奠基性+danh từ, 奠基仪式). ` +
+        `MỖI collocation kèm ĐÚNG 2 câu ví dụ đời thường, mỗi câu một tình huống khác nhau. Phần tử: ` +
+        `{"zh"(cụm/kết cấu chữ Hán),"pinyin","vi"(nghĩa cụm),"note_vi"(tùy chọn: 1 câu ghi chú ngắn về sắc thái/ngữ cảnh nếu cần, không thì để ""),` +
+        `"examples":[đúng 2 phần tử {"zh","pinyin"(có dấu thanh),"vi"}]}.\n` +
+        `4. "structures": 2-4 cấu trúc/mẫu câu cố định đáng thuộc nguyên khối, MỖI CẤU TRÚC kèm 1 ví dụ đời thường. ` +
+        `Phần tử: {"pattern"(mẫu chữ Hán, có thể chèn A/B/.../Adj),"pinyin","vi"(giải thích cách dùng),"example_zh","example_pinyin","example_vi"}.\n` +
         `5. "compare": đúng 3 từ gần nghĩa nhất với "${word}". Mỗi phần tử: ` +
         `{"word","pinyin","vi"(nghĩa chính ngắn),"diff_vi"(2-3 câu phân biệt rõ với "${word}" và góc nhìn riêng),` +
         `"collocations":[đúng 3 phần tử {"zh","pinyin","vi"}],"examples":[đúng 2 phần tử {"zh","pinyin","vi"} đời thường]}.\n\n` +
-        `Luôn điền đủ số lượng yêu cầu. Ví dụ phải tự nhiên và thực dụng. Chỉ trả JSON đúng cấu trúc.`,
+        `Chất lượng quan trọng hơn số lượng. Chỉ trả JSON đúng cấu trúc.`,
     });
 
     const arr = (x) => (Array.isArray(x) ? x : []);
@@ -44,6 +49,7 @@ export default async function handler(req, res) {
       zh: c.zh || "",
       pinyin: c.pinyin || "",
       vi: c.vi || "",
+      note_vi: c.note_vi || "",
       examples: arr(c.examples).slice(0, 2),
     }));
     const cmp = arr(payload.compare).slice(0, 3).map((c) => ({
@@ -59,7 +65,7 @@ export default async function handler(req, res) {
       core_vi: payload.core_vi || "",
       core_note_vi: payload.core_note_vi || "",
       collocations: colls,
-      structures: arr(payload.structures).slice(0, 3),
+      structures: arr(payload.structures).slice(0, 4),
       compare: cmp,
       version: SCHEMA_VERSION,
     });
