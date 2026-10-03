@@ -118,7 +118,9 @@ export default function Translate() {
                 {Array.isArray(s.segments) && s.segments.length > 0 && (
                   <div className="chunk-line zh">
                     {s.segments.map((seg, i) => {
-                      const cls = seg.type === "frame" ? "seg-frame"
+                      const cls = seg.type === "proper" ? "seg-proper"
+                        : seg.type === "frame" ? "seg-frame"
+                        : seg.type === "conj" ? "seg-conj"
                         : seg.type === "chunk" ? "seg-chunk"
                         : seg.type === "punct" ? "seg-punct" : "seg-plain";
                       return <span key={i} className={cls}>{seg.text}</span>;
