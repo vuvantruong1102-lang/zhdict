@@ -67,7 +67,7 @@ export default function Chinese() {
     todo.forEach((k) => fetchSection(term, k));
     // Nghĩa cốt lõi (ChatGPT) tự tải ngay, không cần bấm.
     // Tải lại nếu chưa có hoặc cache theo schema cũ (version < 2).
-    if (!cached.gpt || (cached.gpt.version || 0) < 5) fetchSection(term, "gpt");
+    if (!cached.gpt || (cached.gpt.version || 0) < 6) fetchSection(term, "gpt");
   }
 
   // Tra tức thì (lookup) hoặc accordion (explain/zdic)
@@ -140,7 +140,7 @@ export default function Chinese() {
               </div>
 
               <Accordion title="ChatGPT"
-                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 5)} loading={loading.gpt}
+                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 6)} loading={loading.gpt}
                 onLoad={() => fetchSection(word, "gpt")}
                 onRefresh={() => fetchSection(word, "gpt")}>
                 <GptBody d={data.gpt} onPick={(w) => lookup(w)} />
@@ -328,6 +328,9 @@ function GptBody({ d, onPick }) {
                   <span style={{ color: "var(--accent-700)", fontWeight: 600 }}> / {c.pinyin}</span>
                   <span style={{ fontWeight: 600 }}> / {c.vi}</span>
                 </div>
+                {c.note_vi && (
+                  <div className="tiny muted" style={{ marginTop: 2, fontStyle: "italic" }}>{c.note_vi}</div>
+                )}
                 {/* ví dụ — thụt lề, viền trái, chữ nhạt hơn để phân biệt */}
                 {Array.isArray(c.examples) && c.examples.length > 0 && (
                   <div style={{ marginTop: 5, marginLeft: 12, paddingLeft: 12,
