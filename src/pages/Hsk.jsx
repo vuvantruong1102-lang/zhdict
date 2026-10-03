@@ -46,7 +46,7 @@ export default function Hsk() {
               {isOpen && (
                 <div className="hsk-grid">
                   {shown.map((r) => (
-                    <span key={r[0]} className="hsk-word" onClick={() => navigate(`/zh?w=${encodeURIComponent(r[0])}`)} title="Bấm để tra">
+                    <span key={r[0]} className="hsk-word" onClick={() => navigate(`/?w=${encodeURIComponent(r[0])}`)} title="Bấm để tra">
                       <span className="zh">{r[0]}</span>
                       <span className="tiny" style={{ color: "var(--accent-700)" }}>{pyfn(r[0], { toneType: "symbol" })}</span>
                     </span>
