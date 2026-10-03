@@ -1,6 +1,6 @@
 // POST { word } -> {
 //   core_vi, core_note_vi,
-//   collocations: [{ zh, pinyin, vi, ex_zh, ex_pinyin, ex_vi }],     // >=6, mỗi cái kèm 1 ví dụ
+//   collocations: [{ zh, pinyin, vi, examples:[{zh,pinyin,vi}]x2 }], // >=6, mỗi cái 2 ví dụ
 //   structures:   [{ pattern, pinyin, vi, example_zh, example_pinyin, example_vi }], // 3
 //   compare:      [{ word, pinyin, vi, diff_vi,
 //                    collocations:[{zh,pinyin,vi}]x3,
@@ -8,7 +8,7 @@
 //   version
 // }
 import { chatJSON, isChinese } from "./_lib/openai.js";
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
@@ -16,28 +16,36 @@ export default async function handler(req, res) {
   if (!isChinese(word)) return res.status(400).json({ error: "invalid_word" });
   try {
     const payload = await chatJSON({
-      temperature: 0.5,
+      temperature: 0.6,
       system:
         "Bạn là giáo viên tiếng Trung giàu kinh nghiệm, dạy người Việt. " +
-        "Giải thích chính xác, tự nhiên, thực dụng, có chiều sâu. Chỉ trả JSON, không thêm chữ nào khác.",
+        "Giải thích chính xác, tự nhiên, có chiều sâu. " +
+        "Câu ví dụ phải là câu đời thường, hay gặp trong cuộc sống thật (hội thoại, công việc, tin tức, mua sắm, gia đình...), " +
+        "tự nhiên như người bản xứ nói, KHÔNG phải câu mẫu khô cứng trong sách giáo khoa. " +
+        "Chỉ trả JSON, không thêm chữ nào khác.",
       user:
         `Phân tích từ tiếng Trung "${word}" cho người Việt học tiếng Trung. Trả JSON với các khóa:\n\n` +
         `1. "core_vi": nghĩa cốt lõi, liệt kê các nét nghĩa chính ngăn cách bằng " / " ` +
         `(ví dụ với 亮相: "xuất hiện công khai / ra mắt / lộ diện / trình làng").\n` +
-        `2. "core_note_vi": 2-4 câu giải thích sâu sắc thái và cách dùng đặc trưng, có đối chiếu với từ dễ nhầm nếu có ` +
-        `(ví dụ: "Nó không đơn thuần là 出现 – xuất hiện, mà thường hàm ý xuất hiện trước công chúng để mọi người nhìn thấy, chú ý hoặc đánh giá.").\n` +
+        `2. "core_note_vi": 2-4 câu giải thích sâu sắc thái và cách dùng đặc trưng, có đối chiếu với từ dễ nhầm nếu có.\n` +
         `3. "collocations": ÍT NHẤT 6 (lý tưởng 6-8) collocation phổ biến nhất với "${word}". ` +
-        `MỖI collocation kèm 1 câu ví dụ minh họa. Phần tử: ` +
-        `{"zh"(cụm chữ Hán),"pinyin","vi"(nghĩa cụm),"ex_zh"(câu ví dụ chữ Hán),"ex_pinyin"(pinyin câu),"ex_vi"(dịch câu)}.\n` +
-        `4. "structures": đúng 3 cấu trúc/mẫu câu thường gặp, MỖI CẤU TRÚC kèm 1 ví dụ. ` +
+        `MỖI collocation kèm ĐÚNG 2 câu ví dụ đời thường, thực tế, mỗi câu một tình huống khác nhau. Phần tử: ` +
+        `{"zh"(cụm chữ Hán),"pinyin","vi"(nghĩa cụm),"examples":[đúng 2 phần tử {"zh"(câu chữ Hán),"pinyin"(có dấu thanh),"vi"(dịch câu)}]}.\n` +
+        `4. "structures": đúng 3 cấu trúc/mẫu câu thường gặp, MỖI CẤU TRÚC kèm 1 ví dụ đời thường. ` +
         `Phần tử: {"pattern"(mẫu chữ Hán),"pinyin","vi"(giải thích cách dùng),"example_zh","example_pinyin","example_vi"}.\n` +
         `5. "compare": đúng 3 từ gần nghĩa nhất với "${word}". Mỗi phần tử: ` +
-        `{"word","pinyin","vi"(nghĩa chính ngắn),"diff_vi"(2-3 câu phân biệt rõ với "${word}" và góc nhìn riêng của từ này),` +
-        `"collocations":[đúng 3 phần tử {"zh","pinyin","vi"}],"examples":[đúng 2 phần tử {"zh","pinyin","vi"}]}.\n\n` +
-        `Luôn điền đủ số lượng yêu cầu. Chỉ trả JSON đúng cấu trúc.`,
+        `{"word","pinyin","vi"(nghĩa chính ngắn),"diff_vi"(2-3 câu phân biệt rõ với "${word}" và góc nhìn riêng),` +
+        `"collocations":[đúng 3 phần tử {"zh","pinyin","vi"}],"examples":[đúng 2 phần tử {"zh","pinyin","vi"} đời thường]}.\n\n` +
+        `Luôn điền đủ số lượng yêu cầu. Ví dụ phải tự nhiên và thực dụng. Chỉ trả JSON đúng cấu trúc.`,
     });
 
     const arr = (x) => (Array.isArray(x) ? x : []);
+    const colls = arr(payload.collocations).slice(0, 8).map((c) => ({
+      zh: c.zh || "",
+      pinyin: c.pinyin || "",
+      vi: c.vi || "",
+      examples: arr(c.examples).slice(0, 2),
+    }));
     const cmp = arr(payload.compare).slice(0, 3).map((c) => ({
       word: c.word || "",
       pinyin: c.pinyin || "",
@@ -50,7 +58,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       core_vi: payload.core_vi || "",
       core_note_vi: payload.core_note_vi || "",
-      collocations: arr(payload.collocations).slice(0, 8),
+      collocations: colls,
       structures: arr(payload.structures).slice(0, 3),
       compare: cmp,
       version: SCHEMA_VERSION,
