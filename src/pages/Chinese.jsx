@@ -67,7 +67,7 @@ export default function Chinese() {
     todo.forEach((k) => fetchSection(term, k));
     // Nghĩa cốt lõi (ChatGPT) tự tải ngay, không cần bấm.
     // Tải lại nếu chưa có hoặc cache theo schema cũ (version < 2).
-    if (!cached.gpt || (cached.gpt.version || 0) < 4) fetchSection(term, "gpt");
+    if (!cached.gpt || (cached.gpt.version || 0) < 5) fetchSection(term, "gpt");
   }
 
   // Tra tức thì (lookup) hoặc accordion (explain/zdic)
@@ -120,8 +120,8 @@ export default function Chinese() {
               <div className="card card-pad fade-in">
                 <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline" }}>
                   <div className="row" style={{ alignItems: "baseline", gap: 14 }}>
-                    <span className="zh" style={{ fontSize: 42, fontWeight: 500 }}>{word}</span>
-                    <span style={{ color: "var(--accent-700)", fontWeight: 600, fontSize: 19 }}>
+                    <span className="zh" style={{ fontSize: 126, fontWeight: 500, lineHeight: 1.05 }}>{word}</span>
+                    <span style={{ color: "var(--accent-700)", fontWeight: 600, fontSize: 28 }}>
                       {pinyin(word, { toneType: "symbol" })}
                     </span>
                   </div>
@@ -140,7 +140,7 @@ export default function Chinese() {
               </div>
 
               <Accordion title="ChatGPT"
-                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 4)} loading={loading.gpt}
+                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 5)} loading={loading.gpt}
                 onLoad={() => fetchSection(word, "gpt")}
                 onRefresh={() => fetchSection(word, "gpt")}>
                 <GptBody d={data.gpt} onPick={(w) => lookup(w)} />
@@ -329,12 +329,17 @@ function GptBody({ d, onPick }) {
                   <span style={{ fontWeight: 600 }}> / {c.vi}</span>
                 </div>
                 {/* ví dụ — thụt lề, viền trái, chữ nhạt hơn để phân biệt */}
-                {c.ex_zh && (
-                  <div style={{ marginTop: 4, marginLeft: 12, paddingLeft: 12,
-                    borderLeft: "3px solid var(--accent)", lineHeight: 1.5, color: "var(--text-soft)" }}>
-                    <span className="zh">{c.ex_zh}</span>
-                    {c.ex_pinyin && <span style={{ color: "var(--accent-700)" }}> / {c.ex_pinyin}</span>}
-                    {c.ex_vi && <span> / {c.ex_vi}</span>}
+                {Array.isArray(c.examples) && c.examples.length > 0 && (
+                  <div style={{ marginTop: 5, marginLeft: 12, paddingLeft: 12,
+                    borderLeft: "3px solid var(--accent)" }}>
+                    {c.examples.map((ex, k) => (
+                      <div key={k} style={{ lineHeight: 1.5, color: "var(--text-soft)",
+                        marginTop: k ? 4 : 0 }}>
+                        <span className="zh">{ex.zh}</span>
+                        {ex.pinyin && <span style={{ color: "var(--accent-700)" }}> / {ex.pinyin}</span>}
+                        {ex.vi && <span> / {ex.vi}</span>}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
