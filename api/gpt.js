@@ -8,7 +8,7 @@
 //   version
 // }
 import { chatJSON, isChinese } from "./_lib/openai.js";
-const SCHEMA_VERSION = 7;
+const SCHEMA_VERSION = 8;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
@@ -37,9 +37,9 @@ export default async function handler(req, res) {
         `MỖI collocation kèm ĐÚNG 2 câu ví dụ đời thường, mỗi câu một tình huống khác nhau. Phần tử: ` +
         `{"zh"(cụm/kết cấu chữ Hán),"pinyin","vi"(nghĩa cụm),"note_vi"(tùy chọn: 1 câu ghi chú ngắn về sắc thái/ngữ cảnh nếu cần, không thì để ""),` +
         `"examples":[đúng 2 phần tử {"zh","pinyin"(có dấu thanh),"vi"}]}.\n` +
-        `4. "structures": 2-4 cấu trúc/mẫu câu cố định đáng thuộc nguyên khối, MỖI CẤU TRÚC kèm 1 ví dụ đời thường. ` +
+        `4. "structures": đúng 4 cấu trúc/mẫu câu cố định mà người bản xứ HAY DÙNG NHẤT, đáng thuộc nguyên khối, MỖI CẤU TRÚC kèm 1 ví dụ đời thường. ` +
         `Phần tử: {"pattern"(mẫu chữ Hán, có thể chèn A/B/.../Adj),"pinyin","vi"(giải thích cách dùng),"example_zh","example_pinyin","example_vi"}.\n` +
-        `5. "compare": đúng 3 từ gần nghĩa nhất với "${word}". Mỗi phần tử: ` +
+        `5. "compare": đúng 4 từ gần nghĩa nhất với "${word}". Mỗi phần tử: ` +
         `{"word","pinyin","vi"(nghĩa chính ngắn),"diff_vi"(2-3 câu phân biệt rõ với "${word}" và góc nhìn riêng),` +
         `"collocations":[đúng 3 phần tử {"zh","pinyin","vi"}],"examples":[đúng 2 phần tử {"zh","pinyin","vi"} đời thường]}.\n\n` +
         `Chất lượng quan trọng hơn số lượng. Chỉ trả JSON đúng cấu trúc.`,
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       note_vi: c.note_vi || "",
       examples: arr(c.examples).slice(0, 2),
     }));
-    const cmp = arr(payload.compare).slice(0, 3).map((c) => ({
+    const cmp = arr(payload.compare).slice(0, 4).map((c) => ({
       word: c.word || "",
       pinyin: c.pinyin || "",
       vi: c.vi || "",
