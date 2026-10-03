@@ -8,7 +8,7 @@
 //   version
 // }
 import { chatJSON, isChinese } from "./_lib/openai.js";
-const SCHEMA_VERSION = 6;
+const SCHEMA_VERSION = 7;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
@@ -28,8 +28,9 @@ export default async function handler(req, res) {
         `Phân tích từ/cụm tiếng Trung "${word}" cho người Việt học tiếng Trung. Trả JSON với các khóa:\n\n` +
         `1. "core_vi": nghĩa cốt lõi, liệt kê các nét nghĩa chính ngăn cách bằng " / ".\n` +
         `2. "core_note_vi": 2-4 câu giải thích sâu sắc thái, cách dùng đặc trưng, đối chiếu với từ dễ nhầm nếu có.\n` +
-        `3. "collocations": các collocation / kết cấu QUAN TRỌNG và THẬT SỰ phổ biến nhất với "${word}", xếp từ hay gặp nhất. ` +
-        `Lấy 4 đến 8 cụm tùy theo từ này thực sự có bao nhiêu cụm đáng học — KHÔNG độn cho đủ số. ` +
+        `3. "collocations": ÍT NHẤT 5 collocation / kết cấu (lý tưởng 5-8) QUAN TRỌNG và THẬT SỰ phổ biến nhất với "${word}", xếp từ hay gặp nhất. ` +
+        `Tất cả phải là cụm người bản xứ dùng thật trong thực tế — KHÔNG bịa cụm ghép máy móc để cho đủ số. ` +
+        `Hãy khai thác đủ các dạng (cụm động từ, kết cấu ngữ pháp, biến thể, mẫu cố định) để đạt tối thiểu 5 cụm chất lượng. ` +
         `Collocation KHÔNG nhất thiết phải chứa nguyên chữ "${word}" ghép với danh từ: nó có thể là cụm động từ, kết cấu ngữ pháp, ` +
         `dạng biến thể hoặc mẫu cố định mà "${word}" tham gia (ví dụ với 奠基 thì cụm quan trọng nhất là động từ 奠定……基础, ` +
         `rồi các kết cấu ……的奠基人, 奠基之作, 奠基性+danh từ, 奠基仪式). ` +
