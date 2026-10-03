@@ -67,7 +67,7 @@ export default function Chinese() {
     todo.forEach((k) => fetchSection(term, k));
     // Nghĩa cốt lõi (ChatGPT) tự tải ngay, không cần bấm.
     // Tải lại nếu chưa có hoặc cache theo schema cũ (version < 2).
-    if (!cached.gpt || (cached.gpt.version || 0) < 6) fetchSection(term, "gpt");
+    if (!cached.gpt || (cached.gpt.version || 0) < 7) fetchSection(term, "gpt");
   }
 
   // Tra tức thì (lookup) hoặc accordion (explain/zdic)
@@ -140,7 +140,7 @@ export default function Chinese() {
               </div>
 
               <Accordion title="ChatGPT"
-                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 6)} loading={loading.gpt}
+                loaded={!!data.gpt && (data.gpt.__error || (data.gpt.version || 0) >= 7)} loading={loading.gpt}
                 onLoad={() => fetchSection(word, "gpt")}
                 onRefresh={() => fetchSection(word, "gpt")}>
                 <GptBody d={data.gpt} onPick={(w) => lookup(w)} />
