@@ -116,24 +116,28 @@ export default function Translate() {
                     liên từ và các từ ngữ pháp (之下,在,当,的) tô đậm + xanh lá */}
                 {Array.isArray(s.chunks) && s.chunks.length > 0 && (
                   <div className="chunk-flow">
-                    {s.chunks.map((ch, ci) => (
-                      <span key={ci} className="chunk-grp">
-                        {(ch.tokens || []).map((t, ti) => {
-                          if (!hasHan(t.hz)) return <span key={ti} className="cf-punct zh">{t.hz}</span>;
-                          const py = t.pinyin || pinyin(t.hz, { toneType: "symbol" });
-                          const green = isGreen(t.hz);
-                          return (
-                            <span key={ti}
-                              className={"cf-tok" + (green ? " cf-green" : "")}
-                              onClick={() => lookupWord(t.hz)}
-                              title={`${t.meaning_vi || ""} — bấm để tra`}>
-                              <span className="cf-hz zh">{t.hz}</span>
-                              <span className="cf-py">{py}</span>
-                            </span>
-                          );
-                        })}
-                      </span>
-                    ))}
+                    {s.chunks.map((ch, ci) => {
+                      const isProper = ch.type === "proper";
+                      return (
+                        <span key={ci} className="chunk-grp">
+                          {(ch.tokens || []).map((t, ti) => {
+                            if (!hasHan(t.hz)) return <span key={ti} className="cf-punct zh">{t.hz}</span>;
+                            const py = t.pinyin || pinyin(t.hz, { toneType: "symbol" });
+                            // Tên riêng -> đỏ; còn lại, nếu thuộc danh sách liên từ/ngữ pháp -> xanh
+                            const cls = isProper ? " cf-proper" : (isGreen(t.hz) ? " cf-green" : "");
+                            return (
+                              <span key={ti}
+                                className={"cf-tok" + cls}
+                                onClick={() => lookupWord(t.hz)}
+                                title={`${t.meaning_vi || ""} — bấm để tra`}>
+                                <span className="cf-hz zh">{t.hz}</span>
+                                <span className="cf-py">{py}</span>
+                              </span>
+                            );
+                          })}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
 
