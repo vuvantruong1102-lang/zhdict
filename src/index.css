@@ -49,7 +49,7 @@ a { color: var(--accent-700); text-decoration: none; }
 /* ====================== APP LAYOUT ====================== */
 .app  { display: flex; min-height: 100vh; }
 .main { flex: 1; min-width: 0; background: var(--bg); }
-.page { max-width: 1600px; margin: 0 auto; padding: 36px 44px 64px; }
+.page { max-width: 2000px; margin: 0 auto; padding: 36px 44px 64px; }
 
 /* ====================== SIDEBAR ====================== */
 .sidebar {
