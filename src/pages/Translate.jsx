@@ -7,6 +7,19 @@ import AskBox from "../components/AskBox.jsx";
 
 const hasHan = (s) => /[\u4e00-\u9fff]/.test(s || "");
 
+// Các từ cần in đậm + tô xanh lá trong câu chunking:
+// liên từ phổ biến + các từ ngữ pháp 之下, 在, 当, 的
+const GREEN_WORDS = new Set([
+  // liên từ
+  "因为","所以","但是","可是","然而","虽然","尽管","不过","而且","并且","并",
+  "而","和","与","及","以及","或","或者","还是","不但","不仅","甚至","况且",
+  "因此","于是","既然","即使","假如","如果","要是","只要","只有","无论","不管",
+  "除非","否则","那么","就","跟","同","为了","由于","加上","再加上","一方面","另一方面",
+  // từ ngữ pháp theo yêu cầu
+  "之下","在","当","的",
+]);
+const isGreen = (w) => GREEN_WORDS.has((w || "").trim());
+
 
 
 // Tách văn bản dài thành từng câu (tránh timeout). Cắt theo dấu câu tiếng Trung;
@@ -96,39 +109,33 @@ export default function Translate() {
               <div key={si} className="card card-pad stack">
                 {res.sentences.length > 1 && <p className="field-label" style={{ margin: 0 }}>Câu {si + 1}</p>}
 
+                {/* Bản dịch tiếng Việt — lên trên */}
+                <div className="tok-trans"><b>Dịch:</b> {s.translation_vi}</div>
+
                 {/* Câu gốc chia cụm nghĩa: mỗi chữ có pinyin, click tra được;
-                    từ ngữ pháp của kết cấu cách xa in đậm; tên riêng đỏ; liên từ xanh lá */}
+                    liên từ và các từ ngữ pháp (之下,在,当,的) tô đậm + xanh lá */}
                 {Array.isArray(s.chunks) && s.chunks.length > 0 && (
                   <div className="chunk-flow">
-                    {s.chunks.map((ch, ci) => {
-                      const chCls = "chunk-grp"
-                        + (ch.type === "proper" ? " grp-proper" : "")
-                        + (ch.type === "conj" ? " grp-conj" : "")
-                        + (ch.type === "punct" ? " grp-punct" : "");
-                      return (
-                        <span key={ci} className={chCls}>
-                          {(ch.tokens || []).map((t, ti) => {
-                            const isPunct = ch.type === "punct" || !hasHan(t.hz);
-                            if (isPunct) return <span key={ti} className="cf-punct zh">{t.hz}</span>;
-                            const py = t.pinyin || pinyin(t.hz, { toneType: "symbol" });
-                            return (
-                              <span key={ti}
-                                className={"cf-tok" + (t.emphasis ? " cf-emph" : "")}
-                                onClick={() => lookupWord(t.hz)}
-                                title={`${t.meaning_vi || ""} — bấm để tra`}>
-                                <span className="cf-hz zh">{t.hz}</span>
-                                <span className="cf-py">{py}</span>
-                              </span>
-                            );
-                          })}
-                        </span>
-                      );
-                    })}
+                    {s.chunks.map((ch, ci) => (
+                      <span key={ci} className="chunk-grp">
+                        {(ch.tokens || []).map((t, ti) => {
+                          if (!hasHan(t.hz)) return <span key={ti} className="cf-punct zh">{t.hz}</span>;
+                          const py = t.pinyin || pinyin(t.hz, { toneType: "symbol" });
+                          const green = isGreen(t.hz);
+                          return (
+                            <span key={ti}
+                              className={"cf-tok" + (green ? " cf-green" : "")}
+                              onClick={() => lookupWord(t.hz)}
+                              title={`${t.meaning_vi || ""} — bấm để tra`}>
+                              <span className="cf-hz zh">{t.hz}</span>
+                              <span className="cf-py">{py}</span>
+                            </span>
+                          );
+                        })}
+                      </span>
+                    ))}
                   </div>
                 )}
-
-                {/* Bản dịch tiếng Việt */}
-                <div className="tok-trans"><b>Dịch:</b> {s.translation_vi}</div>
 
                 <AskBox context={`Câu tiếng Trung: "${s.chinese}" — Bản dịch: ${s.translation_vi}`}
                   placeholder="Hỏi về câu này…" />
