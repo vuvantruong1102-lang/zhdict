@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { pinyin } from "pinyin-pro";
 import { api } from "../lib/api.js";
@@ -6,6 +6,26 @@ import Spinner from "../components/Spinner.jsx";
 import AskBox from "../components/AskBox.jsx";
 
 const hasHan = (s) => /[\u4e00-\u9fff]/.test(s || "");
+
+// Màu theo vai trò ngữ pháp
+const ROLE_COLORS = {
+  subject:     "#c0392b", // chủ ngữ — đỏ
+  verb:        "#1e7e34", // động từ/vị ngữ — xanh lá
+  object:      "#2471a3", // tân ngữ — xanh dương
+  attributive: "#8e44ad", // định ngữ — tím
+  adverbial:   "#b9770e", // trạng ngữ — cam
+  conjunction: "#7f8c8d", // liên/giới/trợ từ — xám
+  other:       "var(--text)",
+};
+const ROLE_LABELS = {
+  subject: "chủ ngữ", verb: "động từ / vị ngữ", object: "tân ngữ",
+  attributive: "định ngữ", adverbial: "trạng ngữ", conjunction: "liên/giới/trợ từ", other: "khác",
+};
+// Chú thích chỉ hiện các vai trò chính
+const LEGEND = [
+  ["subject", "Chủ ngữ"], ["verb", "Động từ/Vị ngữ"], ["object", "Tân ngữ"],
+  ["attributive", "Định ngữ"], ["adverbial", "Trạng ngữ"],
+];
 
 // Tách văn bản dài thành từng câu (tránh timeout). Cắt theo dấu câu tiếng Trung;
 // câu nào vẫn quá dài thì cắt tiếp theo dấu phẩy.
@@ -33,8 +53,6 @@ export default function Translate() {
   const [res, setRes] = useState(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(null);
-  const [hanVietFn, setHanVietFn] = useState(null);
-  useEffect(() => { import("../lib/hanviet.js").then((m) => setHanVietFn(() => m.hanVietOf)); }, []);
 
   function clearText() { setText(""); setRes(null); }
 
@@ -68,7 +86,7 @@ export default function Translate() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Dịch tiếng Trung</h1>
-          <p className="page-sub">Dán câu (hoặc cả đoạn) tiếng Trung. Mỗi từ hiện pinyin · Hán · Hán Việt · nghĩa; phía dưới là bản dịch cả câu. Bấm vào từ để tra chi tiết.</p>
+          <p className="page-sub">Dán câu (hoặc cả đoạn) tiếng Trung. Trên cùng là bản dịch tiếng Việt; bên dưới là câu gốc với pinyin, các từ được tô màu theo vai trò ngữ pháp. Bấm vào từ để tra chi tiết.</p>
         </div>
       </div>
 
@@ -95,27 +113,35 @@ export default function Translate() {
             {res.sentences.map((s, si) => (
               <div key={si} className="card card-pad stack">
                 {res.sentences.length > 1 && <p className="field-label" style={{ margin: 0 }}>Câu {si + 1}</p>}
-                <div className="tok-wrap">
+
+                {/* Dòng 1: bản dịch tiếng Việt */}
+                <div className="tok-trans"><b>Dịch:</b> {s.translation_vi}</div>
+
+                {/* Dòng 2: chữ Hán (trên) + pinyin (dưới), tô màu theo vai trò ngữ pháp */}
+                <div className="sent-flow">
                   {s.tokens.map((t, i) => {
-                    if (!hasHan(t.token)) return <span key={i} className="tok-punct zh">{t.token}</span>;
+                    if (!hasHan(t.token)) return <span key={i} className="flow-punct zh">{t.token}</span>;
                     const py = t.pinyin || pinyin(t.token, { toneType: "symbol" });
-                    const hv = hanVietFn ? hanVietFn(t.token) : "";
+                    const color = ROLE_COLORS[t.role] || ROLE_COLORS.other;
                     return (
-                      <span key={i} className="tok clickable" onClick={() => lookupWord(t.token)} title="Bấm để tra chi tiết">
-                        <span className="tok-py">{py}</span>
-                        <span className="tok-hz zh">{t.token}</span>
-                        <span className="tok-hv">{hv}</span>
-                        <span className="tok-mn">{t.meaning_vi}</span>
+                      <span key={i} className="flow-tok" onClick={() => lookupWord(t.token)}
+                        title={`${t.meaning_vi || ""}${t.role ? ` · ${ROLE_LABELS[t.role] || t.role}` : ""} — bấm để tra`}>
+                        <span className="flow-hz zh" style={{ color }}>{t.token}</span>
+                        <span className="flow-py" style={{ color }}>{py}</span>
                       </span>
                     );
                   })}
                 </div>
-                <div className="tok-trans"><b>Dịch:</b> {s.translation_vi}</div>
-                {s.translation_literal_vi && (
-                  <div className="tiny muted" style={{ marginTop: 2 }}>
-                    <b>Sát nghĩa:</b> {s.translation_literal_vi}
-                  </div>
-                )}
+
+                {/* Chú thích màu */}
+                <div className="role-legend">
+                  {LEGEND.map(([role, label]) => (
+                    <span key={role} className="role-chip">
+                      <span className="role-dot" style={{ background: ROLE_COLORS[role] }} />{label}
+                    </span>
+                  ))}
+                </div>
+
                 <AskBox context={`Câu tiếng Trung: "${s.chinese}" — Bản dịch: ${s.translation_vi}`}
                   placeholder="Hỏi về câu này…" />
               </div>
