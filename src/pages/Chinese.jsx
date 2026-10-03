@@ -157,28 +157,21 @@ export default function Chinese() {
                   onTranslateVi={translateVi} viLoading={loading.vi} />
               </Section>
 
-              <Accordion title="Đặt câu ví dụ"
-                loaded={!!data.examples} loading={loading.examples}
-                onLoad={() => fetchSection(word, "examples")}
-                onRefresh={() => fetchSection(word, "examples")}>
-                <ExamplesBody d={data.examples} />
+              <Accordion title="ChatGPT"
+                loaded={!!data.gpt} loading={loading.gpt}
+                onLoad={() => fetchSection(word, "gpt")}
+                onRefresh={() => fetchSection(word, "gpt")}>
+                <GptBody d={data.gpt} onPick={(w) => lookup(w)} />
               </Accordion>
 
-              <Accordion title="Từ ghép thường gặp"
-                loaded={!!data.compounds} loading={loading.compounds}
-                onLoad={() => fetchSection(word, "compounds")}
-                onRefresh={() => fetchSection(word, "compounds")}>
-                <CompoundsBody d={data.compounds} onPick={(w) => lookup(w)} />
-              </Accordion>
-
-              <Accordion title="Giải thích — Baidu Baike"
+              <Accordion title="Baidu Baike"
                 loaded={!!data.explain && (data.explain.__error || (data.explain.version || 0) >= 5)} loading={loading.explain}
                 onLoad={() => fetchSection(word, "explain")}
                 onRefresh={() => fetchSection(word, "explain")}>
                 <ExplainBody d={data.explain} />
               </Accordion>
 
-              <Accordion title="Giải thích — zdic.net (汉典)"
+              <Accordion title="汉典"
                 loaded={!!data.zdic} loading={loading.zdic}
                 onLoad={() => fetchSection(word, "zdic")}
                 onRefresh={() => fetchSection(word, "zdic")}>
@@ -343,40 +336,99 @@ function LookupBody({ d, word, hanVietLocal, onTranslateVi, viLoading }) {
   );
 }
 
-function ExamplesBody({ d }) {
+function GptBody({ d, onPick }) {
   if (!d) return null;
   if (d.__error) return <div style={{ color: "#c2185b" }}>{d.__error}</div>;
-  if (!d.examples?.length) return <div className="muted tiny">Không có ví dụ.</div>;
-  return (
-    <div className="stack">
-      {d.examples.map((ex, i) => (
-        <div key={i} className="card card-pad stack" style={{ background: "var(--surface-2)", gap: 2 }}>
-          <div className="zh" style={{ fontSize: 18 }}>{ex.zh}</div>
-          <div className="tiny" style={{ color: "var(--accent-700)" }}>{ex.pinyin}</div>
-          <div>{ex.vi}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
+  const examples = d.examples || [];
+  const collocations = d.collocations || [];
+  const structures = d.structures || [];
+  const compare = d.compare || [];
 
-function CompoundsBody({ d, onPick }) {
-  if (!d) return null;
-  if (d.__error) return <div style={{ color: "#c2185b" }}>{d.__error}</div>;
-  if (!d.compounds?.length) return <div className="muted tiny">Không có từ ghép.</div>;
   return (
-    <div className="stack">
-      {d.compounds.map((c, i) => (
-        <div key={i} className="row" style={{ justifyContent: "space-between", alignItems: "baseline", gap: 12,
-          padding: "6px 0", borderTop: i ? "1px solid var(--border)" : "none" }}>
-          <div className="row" style={{ alignItems: "baseline", gap: 8, flexShrink: 0 }}>
-            <span className="zh" style={{ fontSize: 18, cursor: "pointer", color: "var(--accent-700)" }}
-              onClick={() => onPick(c.word)} title="Bấm để tra từ này">{c.word}</span>
-            <span className="tiny" style={{ color: "var(--accent-700)" }}>{c.pinyin}</span>
-          </div>
-          <span style={{ textAlign: "right" }}>{c.vi}</span>
+    <div className="stack" style={{ gap: 18 }}>
+      {/* 1. Nghĩa cốt lõi — ô nền màu nổi bật */}
+      {d.core_vi && (
+        <div style={{
+          borderLeft: "4px solid #dc143b",
+          background: "rgba(220,20,59,0.06)",
+          borderRadius: 10, padding: "12px 16px",
+        }}>
+          <div className="field-label" style={{ margin: 0, color: "#dc143b" }}>✦ Nghĩa cốt lõi</div>
+          <div style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>{d.core_vi}</div>
+          {d.core_note_vi && (
+            <div style={{ marginTop: 6, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{d.core_note_vi}</div>
+          )}
         </div>
-      ))}
+      )}
+
+      {/* 2. Câu ví dụ */}
+      {examples.length > 0 && (
+        <div className="stack" style={{ gap: 8 }}>
+          <p className="field-label" style={{ margin: 0 }}>📝 Câu ví dụ ({examples.length})</p>
+          {examples.map((ex, i) => (
+            <div key={i} className="card card-pad stack" style={{ background: "var(--surface-2)", gap: 2 }}>
+              {ex.collocation && (
+                <div className="tiny" style={{ fontWeight: 600, color: "var(--accent-700)" }}>{ex.collocation}</div>
+              )}
+              <div className="zh" style={{ fontSize: 18 }}>{ex.zh}</div>
+              <div className="tiny" style={{ color: "var(--accent-700)" }}>{ex.pinyin}</div>
+              <div>{ex.vi}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 3. Collocation phổ biến */}
+      {collocations.length > 0 && (
+        <div className="stack" style={{ gap: 6 }}>
+          <p className="field-label" style={{ margin: 0 }}>🔗 Collocation phổ biến ({collocations.length})</p>
+          {collocations.map((c, i) => (
+            <div key={i} className="row" style={{ justifyContent: "space-between", alignItems: "baseline", gap: 12,
+              padding: "6px 0", borderTop: i ? "1px solid var(--border)" : "none" }}>
+              <div className="row" style={{ alignItems: "baseline", gap: 8, flexShrink: 0 }}>
+                <span className="zh" style={{ fontSize: 17 }}>{c.zh}</span>
+                <span className="tiny" style={{ color: "var(--accent-700)" }}>{c.pinyin}</span>
+              </div>
+              <span style={{ textAlign: "right" }}>{c.vi}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 4. Cấu trúc thường gặp */}
+      {structures.length > 0 && (
+        <div className="stack" style={{ gap: 8 }}>
+          <p className="field-label" style={{ margin: 0 }}>🏗️ Cấu trúc thường gặp ({structures.length})</p>
+          {structures.map((s, i) => (
+            <div key={i} className="card card-pad stack" style={{ background: "var(--surface-2)", gap: 3 }}>
+              <div className="zh" style={{ fontSize: 17, fontWeight: 600 }}>{s.pattern}</div>
+              {s.pinyin && <div className="tiny" style={{ color: "var(--accent-700)" }}>{s.pinyin}</div>}
+              {s.vi && <div>{s.vi}</div>}
+              {s.example_zh && (
+                <div className="zh tiny" style={{ marginTop: 2, color: "var(--text-mute)" }}>→ {s.example_zh}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 5. Phân biệt từ gần nghĩa */}
+      {compare.length > 0 && (
+        <div className="stack" style={{ gap: 8 }}>
+          <p className="field-label" style={{ margin: 0 }}>⚖️ Phân biệt với từ gần nghĩa ({compare.length})</p>
+          {compare.map((c, i) => (
+            <div key={i} className="card card-pad stack" style={{ background: "var(--surface-2)", gap: 3 }}>
+              <div className="row" style={{ alignItems: "baseline", gap: 8 }}>
+                <span className="zh" style={{ fontSize: 18, cursor: "pointer", color: "var(--accent-700)" }}
+                  onClick={() => onPick(c.word)} title="Bấm để tra từ này">{c.word}</span>
+                <span className="tiny" style={{ color: "var(--accent-700)" }}>{c.pinyin}</span>
+                {c.vi && <span className="tiny muted">· {c.vi}</span>}
+              </div>
+              {c.diff_vi && <div>{c.diff_vi}</div>}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
