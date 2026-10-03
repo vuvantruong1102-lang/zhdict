@@ -53,7 +53,7 @@ export default function Translate() {
       for (let i = 0; i < chunks.length; i++) {
         if (chunks.length > 1) setProgress({ i: i + 1, n: chunks.length });
         const r = await api.sentence(chunks[i]);
-        sentences.push({ chinese: chunks[i], tokens: r.tokens || [], translation_vi: r.translation_vi || "" });
+        sentences.push({ chinese: chunks[i], tokens: r.tokens || [], translation_vi: r.translation_vi || "", translation_literal_vi: r.translation_literal_vi || "" });
       }
       setRes({ text: full, sentences });
     } catch (e) {
@@ -111,6 +111,11 @@ export default function Translate() {
                   })}
                 </div>
                 <div className="tok-trans"><b>Dịch:</b> {s.translation_vi}</div>
+                {s.translation_literal_vi && (
+                  <div className="tiny muted" style={{ marginTop: 2 }}>
+                    <b>Sát nghĩa:</b> {s.translation_literal_vi}
+                  </div>
+                )}
                 <AskBox context={`Câu tiếng Trung: "${s.chinese}" — Bản dịch: ${s.translation_vi}`}
                   placeholder="Hỏi về câu này…" />
               </div>
