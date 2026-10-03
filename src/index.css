@@ -569,3 +569,7 @@ a { color: var(--accent-700); text-decoration: none; }
 /* liên từ + từ ngữ pháp (之下,在,当,的): in đậm + xanh lá */
 .cf-green .cf-hz { color: #1e7e34; font-weight: 800; }
 .cf-green .cf-py { color: #1e7e34; font-weight: 700; opacity: 1; }
+
+/* tên riêng (người, nước, tổ chức...): in đậm + đỏ */
+.cf-proper .cf-hz { color: #dc143b; font-weight: 800; }
+.cf-proper .cf-py { color: #dc143b; font-weight: 700; opacity: 1; }
