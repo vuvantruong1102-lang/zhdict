@@ -49,8 +49,23 @@ export default function Translate() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(null);
 
-  function clearText() { setText(""); setRes(null); }
+  const [pop, setPop] = useState(null); // { word, core, loading }
 
+  function clearText() { setText(""); setRes(null); setPop(null); }
+
+  // Click từ -> hiện bong bóng nghĩa cốt lõi tại chỗ
+  async function showPopup(w, ev) {
+    const word = (w || "").trim();
+    if (!hasHan(word)) return;
+    ev?.stopPropagation?.();
+    setPop({ word, core: null, loading: true });
+    try {
+      const r = await api.core(word);
+      setPop((p) => (p && p.word === word ? { ...p, core: r.core_vi || "(không có dữ liệu)", loading: false } : p));
+    } catch {
+      setPop((p) => (p && p.word === word ? { ...p, core: "Lỗi tải, thử lại.", loading: false } : p));
+    }
+  }
   function lookupWord(w) {
     if (hasHan(w)) navigate(`/?w=${encodeURIComponent(w.trim())}`);
   }
@@ -134,8 +149,8 @@ export default function Translate() {
                             return (
                               <span key={ti}
                                 className={"cf-tok" + cls + underline}
-                                onClick={() => lookupWord(hz)}
-                                title={`${t.meaning_vi || ""} — bấm để tra`}>
+                                onClick={(e) => showPopup(hz, e)}
+                                title={t.meaning_vi || ""}>
                                 <span className="cf-hz zh">{t.hz}</span>
                                 <span className="cf-py">{py || "\u00a0"}</span>
                               </span>
@@ -156,6 +171,23 @@ export default function Translate() {
 
         {res?.__error && <div className="card card-pad" style={{ color: "#d4537e" }}>{res.__error}</div>}
       </div>
+
+      {/* Bong bóng nghĩa cốt lõi khi bấm từ trong câu */}
+      {pop && (
+        <div className="wp-overlay" onClick={() => setPop(null)}>
+          <div className="wp-card" onClick={(e) => e.stopPropagation()}>
+            <div className="wp-head">
+              <span className="zh" style={{ fontSize: 24, fontWeight: 600 }}>{pop.word}</span>
+              <button className="wp-close" onClick={() => setPop(null)} aria-label="Đóng">✕</button>
+            </div>
+            <div className="wp-body">
+              {pop.loading ? <span className="muted tiny">Đang tải nghĩa…</span>
+                : <span style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{pop.core}</span>}
+            </div>
+            <button className="btn sm block" onClick={() => lookupWord(pop.word)}>Tra chi tiết →</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

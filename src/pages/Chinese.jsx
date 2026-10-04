@@ -331,11 +331,10 @@ function GptBody({ d, onPick }) {
                   <div style={{ marginTop: 5, marginLeft: 12, paddingLeft: 12,
                     borderLeft: "3px solid var(--accent)" }}>
                     {c.examples.map((ex, k) => (
-                      <div key={k} style={{ lineHeight: 1.5, color: "var(--text-soft)",
-                        marginTop: k ? 4 : 0 }}>
-                        <span className="zh">{ex.zh}</span>
-                        {ex.pinyin && <span style={{ color: "var(--accent-700)" }}> / {ex.pinyin}</span>}
-                        {ex.vi && <span> / {ex.vi}</span>}
+                      <div key={k} style={{ lineHeight: 1.5, marginTop: k ? 6 : 0 }}>
+                        <span className="zh" style={{ color: "#dc143b", fontSize: 17 }}>{ex.zh}</span>
+                        {ex.pinyin && <span style={{ fontSize: 13, fontStyle: "italic", color: "var(--text)" }}> / {ex.pinyin}</span>}
+                        {ex.vi && <span style={{ fontSize: 13, fontStyle: "italic", color: "var(--text)" }}> / {ex.vi}</span>}
                       </div>
                     ))}
                   </div>
