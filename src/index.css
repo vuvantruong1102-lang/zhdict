@@ -553,14 +553,15 @@ a { color: var(--accent-700); text-decoration: none; }
   padding: 8px 0 4px;
 }
 .chunk-grp {
-  display: inline-flex; align-items: flex-end;
-  gap: 0 2px;                    /* các từ trong cùng cụm sát nhau */
+  display: inline-flex; align-items: flex-end; flex-wrap: nowrap;
+  gap: 0 2px;                    /* các từ trong cùng cụm sát nhau, luôn nằm ngang */
 }
 .cf-tok {
   display: inline-flex; flex-direction: column; align-items: center;
   cursor: pointer; border-radius: 6px; padding: 2px 3px;
-  transition: background .12s;
+  transition: background .12s; flex: 0 0 auto;
 }
+.cf-hz.zh { white-space: nowrap; }
 .cf-tok:hover { background: var(--surface-2); }
 .cf-hz { font-size: 24px; font-weight: 400; line-height: 1.15; }
 .cf-py { font-size: 12px; margin-top: 1px; opacity: .85; }
@@ -577,7 +578,36 @@ a { color: var(--accent-700); text-decoration: none; }
 /* gạch chân từ ghép 2-4 chữ Hán (chỉ gạch dưới chữ Hán, không gạch pinyin) */
 .cf-underline .cf-hz {
   text-decoration: underline;
-  text-decoration-color: var(--accent);
+  text-decoration-color: var(--text);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;
 }
+
+/* Mobile: chữ nhỏ hơn, cụm sát hơn cho dễ nhìn, không xếp chồng */
+@media (max-width: 640px) {
+  .chunk-flow { gap: 4px 12px; }
+  .cf-hz { font-size: 19px; }
+  .cf-py { font-size: 10px; }
+  .cf-punct { font-size: 19px; }
+}
+
+/* ===== Bong bóng nghĩa cốt lõi (bấm từ trong câu Dịch) ===== */
+.wp-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,.28);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.wp-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px 18px; width: 420px; max-width: 100%;
+  box-shadow: 0 12px 40px rgba(0,0,0,.18);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.wp-head { display: flex; align-items: center; justify-content: space-between; }
+.wp-close {
+  border: none; background: transparent; cursor: pointer;
+  font-size: 16px; color: var(--text-mute); padding: 4px 8px; border-radius: 8px;
+}
+.wp-close:hover { background: var(--surface-2); }
+.wp-body { font-size: 15px; }
