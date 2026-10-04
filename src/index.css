@@ -355,10 +355,11 @@ a { color: var(--accent-700); text-decoration: none; }
   width: 28px; height: 28px; border-radius: 8px;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 20px; line-height: 1; color: var(--text-mute);
-  background: var(--surface-2); border: 1px solid var(--border);
-  cursor: pointer; transition: background .12s, color .12s;
+  background: transparent; border: none;
+  cursor: pointer; transition: opacity .12s, background .12s, color .12s;
+  opacity: .35;
 }
-.ta-clear:hover { background: var(--hover); color: var(--text); }
+.ta-clear:hover { opacity: 1; background: var(--surface-2); color: var(--text); }
 
 .ruby.clickable { cursor: pointer; border-radius: 8px; padding: 2px 3px; transition: background .12s; }
 .ruby.clickable:hover { background: var(--hover); }
@@ -549,18 +550,18 @@ a { color: var(--accent-700); text-decoration: none; }
 /* ===== Câu gốc chia cụm nghĩa (có pinyin, click tra được) ===== */
 .chunk-flow {
   display: flex; flex-wrap: wrap; align-items: flex-end;
-  gap: 6px 22px;                 /* khoảng cách GIỮA CÁC CỤM rộng */
+  gap: 6px 0;                    /* mỗi token tự xuống dòng khi hết chỗ -> không tràn khung */
   padding: 8px 0 4px;
-}
-.chunk-grp {
-  display: inline-flex; align-items: flex-end; flex-wrap: nowrap;
-  gap: 0 2px;                    /* các từ trong cùng cụm sát nhau, luôn nằm ngang */
 }
 .cf-tok {
   display: inline-flex; flex-direction: column; align-items: center;
   cursor: pointer; border-radius: 6px; padding: 2px 3px;
   transition: background .12s; flex: 0 0 auto;
 }
+/* token đầu mỗi cụm: cách cụm trước một khoảng -> thấy ranh giới cụm.
+   Các token còn lại trong cụm (kể cả tên riêng) sát nhau. */
+.cf-tok.cf-chunk-start { margin-left: 16px; }
+.cf-tok.cf-chunk-start:first-child { margin-left: 0; }
 .cf-hz.zh { white-space: nowrap; }
 .cf-tok:hover { background: var(--surface-2); }
 .cf-hz { font-size: 24px; font-weight: 400; line-height: 1.15; }
