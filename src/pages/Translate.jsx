@@ -7,18 +7,6 @@ import AskBox from "../components/AskBox.jsx";
 
 const hasHan = (s) => /[\u4e00-\u9fff]/.test(s || "");
 
-// Các từ cần in đậm + tô xanh lá trong câu chunking:
-// liên từ phổ biến + các từ ngữ pháp 之下, 在, 当, 的
-const GREEN_WORDS = new Set([
-  // liên từ
-  "因为","所以","但是","可是","然而","虽然","尽管","不过","而且","并且","并",
-  "而","和","与","及","以及","或","或者","还是","不但","不仅","甚至","况且",
-  "因此","于是","既然","即使","假如","如果","要是","只要","只有","无论","不管",
-  "除非","否则","那么","就","跟","同","为了","由于","加上","再加上","一方面","另一方面",
-  // từ ngữ pháp theo yêu cầu
-  "之下","在","当","的",
-]);
-const isGreen = (w) => GREEN_WORDS.has((w || "").trim());
 
 
 
@@ -135,19 +123,31 @@ export default function Translate() {
                     Chữ trong cùng cụm (và tên riêng) sát nhau. */}
                 {Array.isArray(s.chunks) && s.chunks.length > 0 && (
                   <div className="chunk-flow">
-                    {s.chunks.map((ch, ci) => {
-                      const isProper = ch.type === "proper";
-                      return (ch.tokens || []).map((t, ti) => {
+                    {(() => {
+                      // Làm phẳng toàn bộ token để xét token liền kề (gom tên riêng sát nhau)
+                      const flat = [];
+                      s.chunks.forEach((ch, ci) =>
+                        (ch.tokens || []).forEach((t, ti) => flat.push({ t, chunkStart: ti === 0 })));
+                      return flat.map((item, idx) => {
+                        const t = item.t;
                         const hz = (t.hz || "").trim();
                         const isPunctOnly = !hasHan(hz) && !/[A-Za-z0-9]/.test(hz);
-                        if (isPunctOnly) return <span key={ci + "-" + ti} className="cf-punct zh">{t.hz}</span>;
+                        if (isPunctOnly) return <span key={idx} className="cf-punct zh">{t.hz}</span>;
                         const py = hasHan(hz) ? (t.pinyin || pinyin(hz, { toneType: "symbol" })) : (t.pinyin || "");
-                        const cls = isProper ? " cf-proper" : (isGreen(hz) ? " cf-green" : "");
+                        // Màu theo nhãn hl: entity=đỏ, logic=xanh, particle=tím
+                        const cls = t.hl === "entity" ? " cf-entity"
+                          : t.hl === "logic" ? " cf-logic"
+                          : t.hl === "particle" ? " cf-particle" : "";
+                        // Gạch chân từ ghép 2-4 chữ Hán
                         const hanLen = (hz.match(/[\u4e00-\u9fff]/g) || []).length;
                         const underline = hanLen >= 2 && hanLen <= 4 ? " cf-underline" : "";
-                        const chunkStart = ti === 0 ? " cf-chunk-start" : "";
+                        // Token entity liền ngay sau một entity -> sát nhau (cùng tên riêng),
+                        // ngược lại nếu là đầu cụm -> cách ra
+                        const prev = flat[idx - 1]?.t;
+                        const tightWithPrev = t.hl === "entity" && prev && prev.hl === "entity";
+                        const chunkStart = item.chunkStart && !tightWithPrev ? " cf-chunk-start" : "";
                         return (
-                          <span key={ci + "-" + ti}
+                          <span key={idx}
                             className={"cf-tok" + cls + underline + chunkStart}
                             onClick={(e) => showPopup(hz, e)}
                             title={t.meaning_vi || ""}>
@@ -156,7 +156,7 @@ export default function Translate() {
                           </span>
                         );
                       });
-                    })}
+                    })()}
                   </div>
                 )}
 
