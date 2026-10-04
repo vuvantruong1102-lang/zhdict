@@ -141,11 +141,14 @@ export default function Translate() {
                         // Gạch chân từ ghép 2-4 chữ Hán
                         const hanLen = (hz.match(/[\u4e00-\u9fff]/g) || []).length;
                         const underline = hanLen >= 2 && hanLen <= 4 ? " cf-underline" : "";
-                        // Token entity liền ngay sau một entity -> sát nhau (cùng tên riêng),
-                        // ngược lại nếu là đầu cụm -> cách ra
+                        // Token entity liền ngay sau một entity -> sát nhau (cùng tên riêng)
                         const prev = flat[idx - 1]?.t;
                         const tightWithPrev = t.hl === "entity" && prev && prev.hl === "entity";
-                        const chunkStart = item.chunkStart && !tightWithPrev ? " cf-chunk-start" : "";
+                        // Token đứng ngay sau DẤU CÂU -> không cần thêm khoảng cách
+                        // (dấu câu đã là ranh giới rồi)
+                        const prevHz = (prev?.hz || "").trim();
+                        const afterPunct = prev && !hasHan(prevHz) && !/[A-Za-z0-9]/.test(prevHz);
+                        const chunkStart = item.chunkStart && !tightWithPrev && !afterPunct ? " cf-chunk-start" : "";
                         return (
                           <span key={idx}
                             className={"cf-tok" + cls + underline + chunkStart}
