@@ -77,13 +77,16 @@ export default function Translate() {
     setLoading(true); setRes(null); setProgress(null);
     const chunks = splitSentences(full);
     try {
-      const sentences = [];
+      let allChunks = [];
+      let allTrans = [];
       for (let i = 0; i < chunks.length; i++) {
         if (chunks.length > 1) setProgress({ i: i + 1, n: chunks.length });
         const r = await api.sentence(chunks[i]);
-        sentences.push({ chinese: chunks[i], chunks: r.chunks || [], translation_vi: r.translation_vi || "" });
+        allChunks = allChunks.concat(r.chunks || []);
+        if (r.translation_vi) allTrans.push(r.translation_vi);
       }
-      setRes({ text: full, sentences });
+      // Gộp tất cả thành một kết quả liền mạch (không chia câu 1, câu 2...)
+      setRes({ text: full, sentences: [{ chinese: full, chunks: allChunks, translation_vi: allTrans.join(" ") }] });
     } catch (e) {
       setRes({ __error: "Không phân tích được. Nếu văn bản quá dài, hãy thử đoạn ngắn hơn rồi phân tích lại." });
     } finally {
@@ -96,7 +99,7 @@ export default function Translate() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Dịch tiếng Trung</h1>
-          <p className="page-sub">Dán câu (hoặc cả đoạn) tiếng Trung. Trên cùng là bản dịch tiếng Việt; bên dưới là câu gốc với pinyin, các từ được tô màu theo vai trò ngữ pháp. Bấm vào từ để tra chi tiết.</p>
+
         </div>
       </div>
 
@@ -127,37 +130,32 @@ export default function Translate() {
                 {/* Bản dịch tiếng Việt — lên trên */}
                 <div className="tok-trans"><b>Dịch:</b> {s.translation_vi}</div>
 
-                {/* Câu gốc chia cụm nghĩa: mỗi chữ có pinyin, click tra được;
-                    liên từ và các từ ngữ pháp (之下,在,当,的) tô đậm + xanh lá */}
+                {/* Câu gốc: các token chảy tự do (tự xuống dòng từng chữ, không tràn khung).
+                    Token ĐẦU mỗi cụm có khoảng cách lớn hơn -> thấy ranh giới cụm.
+                    Chữ trong cùng cụm (và tên riêng) sát nhau. */}
                 {Array.isArray(s.chunks) && s.chunks.length > 0 && (
                   <div className="chunk-flow">
                     {s.chunks.map((ch, ci) => {
                       const isProper = ch.type === "proper";
-                      return (
-                        <span key={ci} className="chunk-grp">
-                          {(ch.tokens || []).map((t, ti) => {
-                            const hz = (t.hz || "").trim();
-                            // Dấu câu thuần (không phải chữ cái/chữ số) -> hiển thị trơn
-                            const isPunctOnly = !hasHan(hz) && !/[A-Za-z0-9]/.test(hz);
-                            if (isPunctOnly) return <span key={ti} className="cf-punct zh">{t.hz}</span>;
-                            const py = hasHan(hz) ? (t.pinyin || pinyin(hz, { toneType: "symbol" })) : (t.pinyin || "");
-                            // Tên riêng -> đỏ; còn lại, nếu thuộc danh sách liên từ/ngữ pháp -> xanh
-                            const cls = isProper ? " cf-proper" : (isGreen(hz) ? " cf-green" : "");
-                            // Gạch chân từ ghép dài 2-4 chữ Hán (chỉ tính chữ Hán)
-                            const hanLen = (hz.match(/[\u4e00-\u9fff]/g) || []).length;
-                            const underline = hanLen >= 2 && hanLen <= 4 ? " cf-underline" : "";
-                            return (
-                              <span key={ti}
-                                className={"cf-tok" + cls + underline}
-                                onClick={(e) => showPopup(hz, e)}
-                                title={t.meaning_vi || ""}>
-                                <span className="cf-hz zh">{t.hz}</span>
-                                <span className="cf-py">{py || "\u00a0"}</span>
-                              </span>
-                            );
-                          })}
-                        </span>
-                      );
+                      return (ch.tokens || []).map((t, ti) => {
+                        const hz = (t.hz || "").trim();
+                        const isPunctOnly = !hasHan(hz) && !/[A-Za-z0-9]/.test(hz);
+                        if (isPunctOnly) return <span key={ci + "-" + ti} className="cf-punct zh">{t.hz}</span>;
+                        const py = hasHan(hz) ? (t.pinyin || pinyin(hz, { toneType: "symbol" })) : (t.pinyin || "");
+                        const cls = isProper ? " cf-proper" : (isGreen(hz) ? " cf-green" : "");
+                        const hanLen = (hz.match(/[\u4e00-\u9fff]/g) || []).length;
+                        const underline = hanLen >= 2 && hanLen <= 4 ? " cf-underline" : "";
+                        const chunkStart = ti === 0 ? " cf-chunk-start" : "";
+                        return (
+                          <span key={ci + "-" + ti}
+                            className={"cf-tok" + cls + underline + chunkStart}
+                            onClick={(e) => showPopup(hz, e)}
+                            title={t.meaning_vi || ""}>
+                            <span className="cf-hz zh">{t.hz}</span>
+                            <span className="cf-py">{py || "\u00a0"}</span>
+                          </span>
+                        );
+                      });
                     })}
                   </div>
                 )}
