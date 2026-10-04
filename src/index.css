@@ -568,13 +568,17 @@ a { color: var(--accent-700); text-decoration: none; }
 .cf-py { font-size: 12px; margin-top: 1px; opacity: .85; }
 .cf-punct { font-size: 24px; align-self: flex-end; color: var(--text-mute); }
 
-/* liên từ + từ ngữ pháp (之下,在,当,的): in đậm + xanh lá */
-.cf-green .cf-hz { color: #1e7e34; font-weight: 800; }
-.cf-green .cf-py { color: #1e7e34; font-weight: 700; opacity: 1; }
+/* NAMED_ENTITY — tên riêng: đỏ đậm */
+.cf-entity .cf-hz { color: #dc143b; font-weight: 800; }
+.cf-entity .cf-py { color: #dc143b; font-weight: 700; opacity: 1; }
 
-/* tên riêng (người, nước, tổ chức...): in đậm + đỏ */
-.cf-proper .cf-hz { color: #dc143b; font-weight: 800; }
-.cf-proper .cf-py { color: #dc143b; font-weight: 700; opacity: 1; }
+/* LOGIC_CONNECTOR — từ nối logic: xanh lá đậm */
+.cf-logic .cf-hz { color: #1e7e34; font-weight: 800; }
+.cf-logic .cf-py { color: #1e7e34; font-weight: 700; opacity: 1; }
+
+/* GRAMMAR_PARTICLE — trợ từ (的地得了着过): tím đậm */
+.cf-particle .cf-hz { color: #8e44ad; font-weight: 800; }
+.cf-particle .cf-py { color: #8e44ad; font-weight: 700; opacity: 1; }
 
 /* gạch chân từ ghép 2-4 chữ Hán (chỉ gạch dưới chữ Hán, không gạch pinyin) */
 .cf-underline .cf-hz {
