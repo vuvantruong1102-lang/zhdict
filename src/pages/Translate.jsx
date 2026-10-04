@@ -124,15 +124,29 @@ export default function Translate() {
                 {Array.isArray(s.chunks) && s.chunks.length > 0 && (
                   <div className="chunk-flow">
                     {(() => {
-                      // Làm phẳng toàn bộ token để xét token liền kề (gom tên riêng sát nhau)
+                      // Làm phẳng token; dấu câu được GHÉP vào cuối chữ Hán của token ngay trước
+                      // để nó dính tự nhiên, không thành ô riêng gây hở hai bên.
                       const flat = [];
-                      s.chunks.forEach((ch, ci) =>
+                      s.chunks.forEach((ch) =>
                         (ch.tokens || []).forEach((t, ti) => flat.push({ t, chunkStart: ti === 0 })));
-                      return flat.map((item, idx) => {
+                      const isPunct = (x) => {
+                        const h = (x || "").trim();
+                        return h && !hasHan(h) && !/[A-Za-z0-9]/.test(h);
+                      };
+                      // Gắn mỗi dấu câu vào token chữ gần nhất phía trước
+                      const render = [];
+                      flat.forEach((item) => {
+                        if (isPunct(item.t.hz) && render.length > 0) {
+                          render[render.length - 1].trail = (render[render.length - 1].trail || "") + item.t.hz;
+                        } else {
+                          render.push({ ...item, trail: "" });
+                        }
+                      });
+                      return render.map((item, idx) => {
                         const t = item.t;
                         const hz = (t.hz || "").trim();
-                        const isPunctOnly = !hasHan(hz) && !/[A-Za-z0-9]/.test(hz);
-                        if (isPunctOnly) return <span key={idx} className="cf-punct zh">{t.hz}</span>;
+                        // Dấu câu đứng đầu (không có token trước) -> hiển thị trơn
+                        if (isPunct(hz)) return <span key={idx} className="cf-punct zh">{t.hz}{item.trail}</span>;
                         const py = hasHan(hz) ? (t.pinyin || pinyin(hz, { toneType: "symbol" })) : (t.pinyin || "");
                         // Màu theo nhãn hl: entity=đỏ, logic=xanh, particle=tím
                         const cls = t.hl === "entity" ? " cf-entity"
@@ -142,19 +156,17 @@ export default function Translate() {
                         const hanLen = (hz.match(/[\u4e00-\u9fff]/g) || []).length;
                         const underline = hanLen >= 2 && hanLen <= 4 ? " cf-underline" : "";
                         // Token entity liền ngay sau một entity -> sát nhau (cùng tên riêng)
-                        const prev = flat[idx - 1]?.t;
+                        const prev = render[idx - 1]?.t;
                         const tightWithPrev = t.hl === "entity" && prev && prev.hl === "entity";
-                        // Token đứng ngay sau DẤU CÂU -> không cần thêm khoảng cách
-                        // (dấu câu đã là ranh giới rồi)
-                        const prevHz = (prev?.hz || "").trim();
-                        const afterPunct = prev && !hasHan(prevHz) && !/[A-Za-z0-9]/.test(prevHz);
+                        // Token đứng ngay sau token có dấu câu kết thúc -> không thêm khoảng cách
+                        const afterPunct = (render[idx - 1]?.trail || "") !== "";
                         const chunkStart = item.chunkStart && !tightWithPrev && !afterPunct ? " cf-chunk-start" : "";
                         return (
                           <span key={idx}
                             className={"cf-tok" + cls + underline + chunkStart}
                             onClick={(e) => showPopup(hz, e)}
                             title={t.meaning_vi || ""}>
-                            <span className="cf-hz zh">{t.hz}</span>
+                            <span className="cf-hz zh">{t.hz}<span className="cf-trail">{item.trail}</span></span>
                             <span className="cf-py">{py || "\u00a0"}</span>
                           </span>
                         );
