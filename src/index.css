@@ -566,7 +566,7 @@ a { color: var(--accent-700); text-decoration: none; }
 .cf-tok:hover { background: var(--surface-2); }
 .cf-hz { font-size: 24px; font-weight: 400; line-height: 1.15; }
 .cf-py { font-size: 12px; margin-top: 1px; opacity: .85; }
-.cf-punct { font-size: 24px; align-self: flex-end; color: var(--text-mute); }
+.cf-punct { font-size: 24px; align-self: flex-end; color: var(--text-mute); margin-left: -2px; padding-bottom: 4px; }
 
 /* NAMED_ENTITY — tên riêng: đỏ đậm */
 .cf-entity .cf-hz { color: #dc143b; font-weight: 800; }
